@@ -4,7 +4,8 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/constants/roles.enum';
 import { SetMetadata } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // Assuming you have JWT guard
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentMethod } from './constants/order.constants';
 
 @Controller('orders')
 export class OrdersController {
@@ -12,6 +13,13 @@ export class OrdersController {
 
     @Post()
     async createOrder(@Body() createOrderDto: CreateOrderDto) {
+        return this.ordersService.create(createOrderDto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('cash-on-delivery')
+    async createCashOnDeliveryOrder(@Body() createOrderDto: CreateOrderDto) {
+        createOrderDto.paymentMethod = PaymentMethod.CASH_ON_DELIVERY;
         return this.ordersService.create(createOrderDto);
     }
 
@@ -25,17 +33,22 @@ export class OrdersController {
         return this.ordersService.findAll();
     }
 
-    // Only store owners can update order status
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @SetMetadata('role', Roles.STORE_OWNER) // Restrict to store owners
+    @SetMetadata('role', Roles.STORE_OWNER)
     @Patch(':id/status')
     async updateOrderStatus(@Param('id') id: string, @Body('status') status: string) {
         return this.ordersService.updateStatus(id, status);
     }
 
-    // Only store owners can cancel orders
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @SetMetadata('role', Roles.STORE_OWNER) // Restrict to store owners
+    @SetMetadata('role', Roles.STORE_OWNER)
+    @Patch(':id/confirm-delivery')
+    async confirmDelivery(@Param('id') id: string) {
+        return this.ordersService.confirmDelivery(id);
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @SetMetadata('role', Roles.STORE_OWNER)
     @Patch(':id/cancel')
     async cancelOrder(@Param('id') id: string) {
         return this.ordersService.cancelOrder(id);

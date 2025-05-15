@@ -1,10 +1,8 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, IsArray } from 'class-validator';
+import { PaymentMethod } from '../constants/order.constants';
+import { OrderItem } from 'src/orders/entities/order-item.entity';
 
 export class CreateOrderDto {
-    @IsNotEmpty()
-    @IsString()
-    orderNumber: string;
-
     @IsNotEmpty()
     @IsString()
     customerId: string;
@@ -14,15 +12,12 @@ export class CreateOrderDto {
     storeId: string;
 
     @IsNotEmpty()
-    @IsString()
-    status: string;
+    @IsEnum(PaymentMethod)
+    paymentMethod: string;
 
     @IsNotEmpty()
-    @IsString()
-    paymentStatus: string;
-
-    @IsNotEmpty()
-    orderDate: Date;
+    @IsArray()
+    items: OrderItem[];
 
     @IsNotEmpty()
     @IsString()
@@ -46,14 +41,5 @@ export class CreateOrderDto {
 
     @IsOptional()
     @IsString()
-    trackingNumber: string;
-
-    @IsOptional()
-    deliveredAt: Date;
-
-    @IsNotEmpty()
-    createdAt: Date;
-
-    @IsNotEmpty()
-    updatedAt: Date;
+    trackingNumber?: string;
 }

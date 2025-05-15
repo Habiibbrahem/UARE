@@ -1,15 +1,26 @@
-// src/orders/constants/order.constants.ts
-
 export enum OrderStatus {
-    PENDING = 'Pending',
-    PAID = 'Paid',
-    SHIPPED = 'Shipped',
-    DELIVERED = 'Delivered',
-    CANCELLED = 'Cancelled',
+    PENDING = 'pending',
+    PROCESSING = 'processing',
+    SHIPPED = 'shipped',
+    DELIVERED = 'delivered',
+    CANCELLED = 'cancelled'
 }
 
 export enum PaymentStatus {
-    PENDING = 'Pending',
-    PAID = 'Paid',
-    FAILED = 'Failed',
+    PENDING = 'pending',
+    PAID = 'paid',
+    FAILED = 'failed'
 }
+
+export enum PaymentMethod {
+    CREDIT_CARD = 'credit_card',
+    PAYPAL = 'paypal',
+    CASH_ON_DELIVERY = 'cash_on_delivery'
+}
+
+export const OrderStatusFlow = [
+    OrderStatus.PENDING,
+    OrderStatus.PROCESSING,
+    OrderStatus.SHIPPED,
+    OrderStatus.DELIVERED
+];

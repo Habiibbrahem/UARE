@@ -1,5 +1,5 @@
 import { Module, Logger } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose'; // Replace TypeORM with Mongoose
+import { MongooseModule } from '@nestjs/mongoose'; 
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
@@ -7,13 +7,14 @@ import { StoreModule } from './store/store.module';
 import { ProductModule } from './product/product.module';
 import { OrdersModule } from './orders/orders.module';
 import { ConfigModule } from '@nestjs/config';
+import { CategoryModule } from './category/category.module';
+import { SubcategoryModule } from './subcategory/subcategory.module';
 
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
 
-        // Replace TypeORM with Mongoose
-        MongooseModule.forRoot('mongodb://localhost:27017/pfe'), // MongoDB connection
+        MongooseModule.forRoot('mongodb://localhost:27017/pfe'), 
 
         AdminModule,
         UserModule,
@@ -21,6 +22,8 @@ import { ConfigModule } from '@nestjs/config';
         StoreModule,
         ProductModule,
         OrdersModule,
+        CategoryModule,
+        SubcategoryModule,
     ],
     controllers: [],
     providers: [],

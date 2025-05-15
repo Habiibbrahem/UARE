@@ -1,53 +1,104 @@
-import { Controller, Post, Body, Get, Param, Patch, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  UseGuards,
+  Request,
+  Query
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { StoreMemberGuard } from '../guards/store-member.guard';  // Import the new guard
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';  // Import JwtAuthGuard to ensure user is set
-import { Request as ExpressRequest } from 'express';  // Import ExpressRequest to type the request object
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/constants/roles.enum';
+import { RequireRoles } from 'src/auth/decorators/roles.decorator';
+import { RequestWithUser } from '../types/request-with-user.type';
 
 @Controller('products')
-@UseGuards(JwtAuthGuard)  // Use JwtAuthGuard to ensure the user is authenticated
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
 
-  // CREATE (POST /products)
-  @UseGuards(StoreMemberGuard) // Only store members can create products
   @Post()
-  create(@Body() createProductDto: CreateProductDto, @Request() req: ExpressRequest) {
-    const user = req.user;  // Extract the user from the request
-    return this.productService.create(createProductDto, user);  // Pass the user to the service
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @RequireRoles(Roles.STORE_OWNER, Roles.STORE_MEMBER, Roles.ADMIN)
+  create(
+    @Body() createProductDto: CreateProductDto,
+    @Request() req: RequestWithUser
+  ) {
+    return this.productService.create(createProductDto, req.user);
   }
 
-  // READ ALL (GET /products)
   @Get()
-  @UseGuards(StoreMemberGuard) // Only store members can view products  
-  async findAll() {
+  findAll() {
     return this.productService.findAll();
   }
 
-  // READ ONE (GET /products/:id)
   @Get(':id')
-  @UseGuards(StoreMemberGuard) // Only store members can view a single product
-  async findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string) {
     return this.productService.findOne(id);
   }
 
   @Patch(':id')
-  @UseGuards(StoreMemberGuard) // Only store members can update products
-  async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(id, updateProductDto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @RequireRoles(Roles.STORE_OWNER, Roles.STORE_MEMBER, Roles.ADMIN)
+  update(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @Request() req: RequestWithUser
+  ) {
+    return this.productService.update(id, updateProductDto, req.user);
   }
 
   @Delete(':id')
-  @UseGuards(StoreMemberGuard) // Only store members can delete products  
-  async remove(@Param('id') id: string) {
-    return this.productService.remove(id);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @RequireRoles(Roles.STORE_OWNER, Roles.ADMIN)
+  remove(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser
+  ) {
+    return this.productService.remove(id, req.user);
   }
 
-  // GET BY STORE (GET /products/store/:storeId)
   @Get('store/:storeId')
-  async findByStore(@Param('storeId') storeId: string) {
+  findByStore(@Param('storeId') storeId: string) {
     return this.productService.findByStore(storeId);
+  }
+
+  @Get('category/:categoryId')
+  findByCategory(@Param('categoryId') categoryId: string) {
+    return this.productService.findByCategory(categoryId);
+  }
+
+  @Get('subcategory/:subcategoryId')
+  findBySubcategory(@Param('subcategoryId') subcategoryId: string) {
+    return this.productService.findBySubcategory(subcategoryId);
+  }
+
+  @Get('search/filter')
+  filterProducts(
+    @Query('storeId') storeId?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('subcategoryId') subcategoryId?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string
+  ) {
+    const filter: any = {};
+
+    if (storeId) filter.storeId = storeId;
+    if (categoryId) filter.categoryId = categoryId;
+    if (subcategoryId) filter.subcategoryId = subcategoryId;
+
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+    }
+
+    return this.productService.findAll(filter);
   }
 }

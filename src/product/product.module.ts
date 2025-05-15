@@ -4,16 +4,20 @@ import { Product, ProductSchema } from './entities/product.entity';
 import { ProductService } from './product.service';
 import { ProductController } from './product.controller';
 import { Store, StoreSchema } from '../store/entities/store.entity';
-import { StoreModule } from '../store/store.module';
+import { CategoryModule } from '../category/category.module';
+import { SubcategoryModule } from '../subcategory/subcategory.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Product.name, schema: ProductSchema },
       { name: Store.name, schema: StoreSchema }
-    ]), StoreModule,
+    ]),
+    CategoryModule,
+    SubcategoryModule
   ],
-  controllers: [ProductController],
   providers: [ProductService],
-  exports: [ProductService],
+  controllers: [ProductController],
+  exports: [ProductService]
 })
 export class ProductModule { }

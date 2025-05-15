@@ -1,35 +1,65 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { StoreService } from 'src/store/store.service';
+import {
+    Injectable,
+    CanActivate,
+    ExecutionContext,
+    ForbiddenException,
+    NotFoundException // Add this import
+} from '@nestjs/common';
+import { StoreService } from '../store/store.service';
+import { ProductService } from '../product/product.service';
 import { Types } from 'mongoose';
 
 @Injectable()
 export class StoreMemberGuard implements CanActivate {
-    constructor(private storeService: StoreService) { }
+    constructor(
+        private storeService: StoreService,
+        private productService: ProductService
+    ) { }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const user = request.user; // The user is set by JwtAuthGuard
-        const storeId = request.body.storeId || request.params.storeId; // Check both body and params
+        const user = request.user;
 
-        console.log('User:', user); // Log user details
-        console.log('Store ID:', storeId); // Log the storeId being used
+        // Try to get storeId from multiple sources
+        let storeId = request.body?.storeId ||
+            request.params?.storeId ||
+            request.query?.storeId;
+
+        // For product-specific routes
+        if (!storeId && request.params?.id) {
+            try {
+                const product = await this.productService.findOne(request.params.id);
+                if (!product?.storeId) {
+                    throw new ForbiddenException('Product has no store association');
+                }
+                storeId = product.storeId.toString();
+                request.params.storeId = storeId; // Store for later use
+            } catch (err) {
+                // Handle specific error cases
+                if (err instanceof NotFoundException) {
+                    throw new ForbiddenException('Product not found');
+                }
+                throw new ForbiddenException('Error verifying product store: ' + err.message);
+            }
+        }
 
         if (!storeId) {
             throw new ForbiddenException('Store ID is required');
         }
 
-        // Check if store exists
+        // Verify store exists
         const store = await this.storeService.findOne(storeId);
         if (!store) {
-            throw new ForbiddenException('Store not found');
+            throw new NotFoundException('Store not found');
         }
 
-        // Ensure the user is a member of the store
-        const storeMember = store.members.some(member => member.equals(new Types.ObjectId(user._id))); // Use equals to compare ObjectId
-        console.log('Is user a member?', storeMember); // Log the result of the check
+        // Verify user is member
+        const isMember = store.members.some(member =>
+            member.equals(new Types.ObjectId(user._id))
+        );
 
-        if (!storeMember) {
-            throw new ForbiddenException('You do not have permission to manage this store');
+        if (!isMember) {
+            throw new ForbiddenException('You do not have permission for this store');
         }
 
         return true;

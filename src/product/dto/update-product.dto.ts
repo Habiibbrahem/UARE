@@ -1,23 +1,47 @@
-// update-product.dto.ts
-import { IsOptional, IsString, IsNumber, IsMongoId } from 'class-validator';
+import {
+    IsOptional,
+    IsString,
+    IsNumber,
+    IsMongoId,
+    Min,
+    IsBoolean
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateProductDto {
-    @IsOptional()
     @IsString()
+    @IsOptional()
     name?: string;
 
-    @IsOptional()
     @IsNumber()
+    @Min(0)
+    @IsOptional()
+    @Type(() => Number)
     price?: number;
 
-    @IsOptional()
     @IsNumber()
+    @Min(0)
+    @IsOptional()
+    @Type(() => Number)
     quantity?: number;
 
-    @IsOptional()
     @IsMongoId()
-    storeId?: string; // Will be converted to ObjectId in service
+    @IsOptional()
+    storeId?: string;
+
+    @IsMongoId()
+    @IsOptional()
+    categoryId?: string;
+
+    @IsMongoId()
+    @IsOptional()
+    subcategoryId?: string;
 
     @IsOptional()
     attributes?: Record<string, any>;
+
+    @IsBoolean()
+    @IsOptional()
+    @Type(() => Boolean)
+    isActive?: boolean;
 }

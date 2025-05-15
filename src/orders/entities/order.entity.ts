@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { PaymentMethod } from '../constants/order.constants';
+import { OrderItem } from 'src/orders/entities/order-item.entity';
 
 export type OrderDocument = Order & Document;
 
@@ -17,8 +19,14 @@ export class Order {
     @Prop({ required: true, default: 'pending' })
     status: string;
 
-    @Prop({ required: true, default: 'unpaid' })
+    @Prop({ required: true, default: 'pending' })
     paymentStatus: string;
+
+    @Prop({ required: true, enum: Object.values(PaymentMethod) })
+    paymentMethod: string;
+
+    @Prop({ type: [OrderItem], required: true })
+    items: OrderItem[];
 
     @Prop({ required: true })
     orderDate: Date;

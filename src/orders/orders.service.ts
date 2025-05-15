@@ -3,15 +3,30 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order, OrderDocument } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { PaymentMethod, OrderStatus, PaymentStatus, OrderStatusFlow } from './constants/order.constants';
+import { OrderHelper } from './helpers/order.helper';
 
 @Injectable()
 export class OrdersService {
     constructor(
-        @InjectModel(Order.name) private orderModel: Model<OrderDocument>
+        @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+        private readonly orderHelper: OrderHelper
     ) { }
 
     async create(createOrderDto: CreateOrderDto): Promise<Order> {
-        const createdOrder = new this.orderModel(createOrderDto);
+        const orderNumber = await this.orderHelper.generateOrderNumber();
+
+        const orderData = {
+            ...createOrderDto,
+            orderNumber,
+            orderDate: new Date(),
+            status: OrderStatus.PENDING,
+            paymentStatus: createOrderDto.paymentMethod === PaymentMethod.CASH_ON_DELIVERY
+                ? PaymentStatus.PENDING
+                : PaymentStatus.PENDING
+        };
+
+        const createdOrder = new this.orderModel(orderData);
         return createdOrder.save();
     }
 
@@ -27,47 +42,68 @@ export class OrdersService {
         return order;
     }
 
-    // Update Order Status
     async updateStatus(id: string, status: string): Promise<Order | null> {
         const order = await this.orderModel.findById(id).exec();
         if (!order) {
             throw new NotFoundException('Order not found');
         }
 
-        // Ensure the status is valid
-        const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-        if (!validStatuses.includes(status)) {
-            throw new BadRequestException('Invalid status');
+        const currentStatusIndex = OrderStatusFlow.indexOf(order.status as OrderStatus);
+        const newStatusIndex = OrderStatusFlow.indexOf(status as OrderStatus);
+
+        if (newStatusIndex === -1 ||
+            (newStatusIndex !== 0 && newStatusIndex < currentStatusIndex)) {
+            throw new BadRequestException('Invalid status transition');
         }
 
-        // Update the status of the order
+        if (status === OrderStatus.DELIVERED &&
+            order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY) {
+            order.paymentStatus = PaymentStatus.PAID;
+            order.deliveredAt = new Date();
+        }
+
         order.status = status;
         return order.save();
     }
 
-    // Cancel Order
+    async confirmDelivery(id: string): Promise<Order | null> {
+        const order = await this.orderModel.findById(id).exec();
+        if (!order) {
+            throw new NotFoundException('Order not found');
+        }
+
+        if (order.status !== OrderStatus.SHIPPED) {
+            throw new BadRequestException('Order must be shipped before delivery confirmation');
+        }
+
+        if (order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY) {
+            order.paymentStatus = PaymentStatus.PAID;
+        }
+
+        order.status = OrderStatus.DELIVERED;
+        order.deliveredAt = new Date();
+        return order.save();
+    }
+
     async cancelOrder(id: string): Promise<Order | null> {
         const order = await this.orderModel.findById(id).exec();
         if (!order) {
             throw new NotFoundException('Order not found');
         }
 
-        // Only allow cancelling if the order status is Pending or Processing
-        if (order.status !== 'pending' && order.status !== 'processing') {
+        if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.PROCESSING) {
             throw new BadRequestException('Cannot cancel this order');
         }
 
-        // Cancel the order (change status to 'cancelled')
-        order.status = 'cancelled';
+        order.status = OrderStatus.CANCELLED;
         return order.save();
     }
 
     async findLastOrderToday(): Promise<Order | null> {
         const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);  // Set to the beginning of today
-
+        startOfDay.setHours(0, 0, 0, 0);
         return this.orderModel.findOne({
-            orderDate: { $gte: startOfDay }  // Find orders created today
-        }).sort({ orderDate: -1 }).exec();  // Sort by orderDate in descending order
+            orderDate: { $gte: startOfDay }
+        }).sort({ orderDate: -1 }).exec();
     }
 }
