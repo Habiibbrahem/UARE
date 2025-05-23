@@ -1,15 +1,52 @@
 import React, { useState } from 'react';
 import { FaTimes, FaUser, FaLock, FaGoogle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import './LoginModal.css';
 
 const LoginModal = ({ onClose, showSignup }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log({ email, password });
-        onClose();
+        setError('');
+        try {
+            const response = await fetch('http://localhost:3000/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!response.ok) {
+                setError('Invalid credentials');
+                return;
+            }
+
+            const data = await response.json();
+            localStorage.setItem('token', data.access_token);
+
+            const base64Payload = data.access_token.split('.')[1];
+            const payload = JSON.parse(atob(base64Payload));
+            const role = payload.role.toLowerCase();
+
+            onClose();
+
+            setTimeout(() => {
+                if (role === 'admin') {
+                    navigate('/admin');
+                } else if (role === 'store_owner') {
+                    navigate('/store-owner');
+                } else if (role === 'store_member') {
+                    navigate('/store-member');
+                } else {
+                    setError('Unknown user role');
+                }
+            }, 100);
+        } catch (err) {
+            setError('Login failed. Try again.');
+        }
     };
 
     return (
@@ -56,6 +93,8 @@ const LoginModal = ({ onClose, showSignup }) => {
                 <button type="submit" className="login-button">
                     Login
                 </button>
+
+                {error && <p style={{ color: 'red' }}>{error}</p>}
 
                 <div className="divider">
                     <span>OR</span>

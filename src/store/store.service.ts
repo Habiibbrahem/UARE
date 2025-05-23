@@ -6,11 +6,13 @@ import { Store } from './entities/store.entity';
 @Injectable()
 export class StoreService {
     constructor(
-        @InjectModel(Store.name) private storeModel: Model<Store>,
+        @InjectModel(Store.name) public storeModel: Model<Store>,
     ) { }
 
     async findAll(): Promise<Store[]> {
-        return this.storeModel.find().exec();
+        return this.storeModel.find()
+            .populate('ownerId', 'name email') // populate owner with minimal fields
+            .exec();
     }
 
     async findOne(id: string): Promise<Store> {
@@ -20,7 +22,8 @@ export class StoreService {
 
         const store = await this.storeModel
             .findById(id)
-            .populate('products') // Populate the products field to get the list of products for the store
+            .populate('products')
+            .populate('ownerId', 'name email')
             .exec();
 
         if (!store) {
@@ -34,7 +37,7 @@ export class StoreService {
         const newStore = new this.storeModel({
             ...createStoreDto,
             createdBy,
-            ownerId: null, // Owner will be assigned later by the admin
+            ownerId: null,
         });
         return newStore.save();
     }
@@ -68,7 +71,7 @@ export class StoreService {
         }
 
         const store = await this.storeModel.findById(id)
-            .populate('ownerId')
+            .populate('ownerId', 'name email')
             .exec();
 
         if (!store) {

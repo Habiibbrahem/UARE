@@ -26,6 +26,10 @@ export class SubcategoryService {
         return this.subcategoryModel.find().populate('category').exec();
     }
 
+    async findByCategoryId(categoryId: string): Promise<Subcategory[]> {
+        return this.subcategoryModel.find({ category: categoryId }).populate('category').exec();
+    }
+
     async findOne(id: string): Promise<Subcategory> {
         if (!Types.ObjectId.isValid(id)) {
             throw new NotFoundException('Invalid subcategory ID');

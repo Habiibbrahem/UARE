@@ -7,15 +7,50 @@ const SignupModal = ({ onClose, showLogin }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setSuccessMsg('');
         if (password !== confirmPassword) {
-            alert("Passwords don't match!");
+            setError("Passwords don't match!");
             return;
         }
-        console.log({ name, email, password });
-        onClose();
+
+        try {
+            const response = await fetch('http://localhost:3000/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password,
+                    role: 'STORE_MEMBER', // or omit to default to CUSTOMER, adjust as needed
+                }),
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                setError(errData.message || 'Failed to register');
+                return;
+            }
+
+            setSuccessMsg('Registration successful! Please login.');
+            setName('');
+            setEmail('');
+            setPassword('');
+            setConfirmPassword('');
+
+            // Optionally auto-switch to login after success
+            setTimeout(() => {
+                onClose();
+                showLogin();
+            }, 1500);
+        } catch {
+            setError('Registration failed. Try again.');
+        }
     };
 
     return (
@@ -77,6 +112,9 @@ const SignupModal = ({ onClose, showLogin }) => {
                 <button type="submit" className="login-button">
                     Sign Up
                 </button>
+
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {successMsg && <p style={{ color: 'green' }}>{successMsg}</p>}
 
                 <div className="divider">
                     <span>OR</span>

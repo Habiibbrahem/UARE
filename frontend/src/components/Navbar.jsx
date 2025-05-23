@@ -1,113 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaUser, FaShoppingBag, FaChevronRight } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import jwt_decode from 'jwt-decode';
 import LoginModal from './LoginModal';
 import SignupModal from './SignupModal';
+import axios from 'axios';
 import './Navbar.css';
 
 const Navbar = () => {
+    const [categories, setCategories] = useState([]);
     const [activeCategory, setActiveCategory] = useState(null);
     const [hoverTimeout, setHoverTimeout] = useState(null);
     const [cartItems] = useState(3);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showSignupModal, setShowSignupModal] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userRole, setUserRole] = useState(null);
+    const navigate = useNavigate();
 
-    const categories = [
-        {
-            name: 'FEMME',
-            subcategories: [
-                {
-                    name: 'Vêtements',
-                    items: [
-                        'Manteaux & Doudounes', 'Vestes & Blazers', 'Robes & Combinaisons',
-                        'Chemises & Blouses', 'Kimonos', 'Pulls & Cardigans', 'Sweats & Gilets',
-                        'Tops & T-shirts', 'Pantalons', 'Jeans', 'Joggings & Leggings',
-                        'Jupes & Shorts', 'Vêtements de Sport', 'Sous-vêtements & Lingerie',
-                        'Pyjamas', 'Maillots de Bain'
-                    ]
-                },
-                {
-                    name: 'Chaussures',
-                    items: [
-                        'Chaussures de ville', 'Sneakers', 'Bottes & Bottines',
-                        'Escarpins', 'Sandales', 'Mules & Tongs'
-                    ]
-                },
-                {
-                    name: 'Accessoires',
-                    items: [
-                        'Lunettes', 'Casquettes', 'Bagagerie', 'Parfums',
-                        'Ceintures', 'Chaussettes', 'Portefeuilles', 'Beauté'
-                    ]
-                }
-            ]
-        },
-        {
-            name: 'HOMME',
-            subcategories: [
-                {
-                    name: 'Vêtements',
-                    items: [
-                        'Manteaux & Doudounes', 'Vestes & Blazers', 'Pulls & Gilets',
-                        'Chemises', 'T-Shirts & Polos', 'Kimonos', 'Sweats', 'Pantalons',
-                        'Jeans', 'Joggings & Leggings', 'Shorts & Bermudas',
-                        'Vêtements de Sport', 'Maillots de Bain', 'Sous-vêtements & Pyjamas'
-                    ]
-                },
-                {
-                    name: 'Chaussures',
-                    items: [
-                        'Bottes & Bottines', 'Chaussures de ville', 'Sneakers',
-                        'Sandales', 'Mules & Tongs'
-                    ]
-                },
-                {
-                    name: 'Accessoires',
-                    items: [
-                        'Lunettes', 'Casquettes', 'Bagagerie', 'Parfums',
-                        'Ceintures', 'Chaussettes', 'Portefeuilles', 'Beauté'
-                    ]
-                }
-            ]
-        },
-        {
-            name: 'ENFANT',
-            subcategories: [
-                {
-                    name: 'Vêtements Fille',
-                    items: [
-                        'Manteaux & Blousons', 'Sweats & Gilets', 'Robes & Combinaisons',
-                        'Tops & T-shirts', 'Chemises & Blouses', 'Jeans & Pantalons',
-                        'Jupes & Shorts', 'Chaussettes'
-                    ]
-                },
-                {
-                    name: 'Vêtements Garçon',
-                    items: [
-                        'Manteaux & Blousons', 'Sweats & Gilets', 'Combinaisons',
-                        'T-Shirts & Polos', 'Chemises & Blouses', 'Jeans & Pantalons',
-                        'Shorts & Bermudas', 'Chaussettes'
-                    ]
-                },
-                {
-                    name: 'Chaussures',
-                    items: [
-                        'Chaussures Fille', 'Chaussures Garçon', 'Sneakers Fille',
-                        'Sneakers Garçon', 'Bottes & Bottines'
-                    ]
-                }
-            ]
-        },
-        {
-            name: 'BOUTIQUE',
-            subcategories: ['Nouveautés', 'Promotions', 'Accessoires']
-        },
-        {
-            name: 'SOLDE',
-            subcategories: ['Réductions', 'Vente privée']
+    const getUserRoleFromToken = (token) => {
+        try {
+            const decoded = jwt_decode(token);
+            return decoded.role || null;
+        } catch {
+            return null;
         }
-    ];
+    };
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    setCategories([]);
+                    return;
+                }
+                const res = await axios.get('http://localhost:3000/categories', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const cats = res.data.map(cat => ({
+                    ...cat,
+                    subcategories: cat.subcategories || [],
+                }));
+                setCategories(cats);
+            } catch (error) {
+                console.error('Failed to fetch categories:', error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        setIsLoggedIn(!!token);
+        if (token) setUserRole(getUserRoleFromToken(token));
+        else setUserRole(null);
+    }, []);
+
+    useEffect(() => {
+        const handleStorage = () => {
+            const token = localStorage.getItem('token');
+            setIsLoggedIn(!!token);
+            if (token) setUserRole(getUserRoleFromToken(token));
+            else setUserRole(null);
+        };
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -139,27 +99,36 @@ const Navbar = () => {
         setShowLoginModal(true);
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        setIsLoggedIn(false);
+        setUserRole(null);
+        navigate('/');
+    };
+
     return (
         <header className={`navbar-container ${isScrolled ? 'scrolled' : ''}`}>
             <nav className="navbar" onMouseLeave={handleMouseLeaveNav}>
-                <div className="navbar-left">
-                    <FaSearch className="search-icon" />
-                </div>
-
                 <div className="navbar-center">
                     <div className="navbar-categories">
-                        {categories.slice(0, 3).map((category, idx) => (
-                            <div key={category.name} className="category" onMouseEnter={() => handleMouseEnterCategory(idx)}>
+                        {categories.map((category, idx) => (
+                            <div
+                                key={category._id || category.name}
+                                className="category"
+                                onMouseEnter={() => handleMouseEnterCategory(idx)}
+                            >
                                 <button className="category-button">{category.name}</button>
-                                {activeCategory === idx && (
+                                {activeCategory === idx && category.subcategories.length > 0 && (
                                     <div className="submenu">
                                         {category.subcategories.map((sub, subIdx) => (
-                                            <div key={subIdx} className="submenu-item-container">
+                                            <div key={sub._id || subIdx} className="submenu-item-container">
                                                 <div className="submenu-item">
-                                                    {typeof sub === 'string' ? sub : sub.name}
-                                                    {typeof sub === 'object' && <FaChevronRight className="submenu-arrow" />}
+                                                    {sub.name || sub}
+                                                    {sub.items && sub.items.length > 0 && (
+                                                        <FaChevronRight className="submenu-arrow" />
+                                                    )}
                                                 </div>
-                                                {typeof sub === 'object' && (
+                                                {sub.items && sub.items.length > 0 && (
                                                     <div className="sub-submenu">
                                                         <div className="sub-submenu-header">
                                                             <h4>{sub.name}</h4>
@@ -180,34 +149,54 @@ const Navbar = () => {
                             </div>
                         ))}
                     </div>
-
                     <div className="navbar-logo">
                         <Link to="/">UARE COLLECTION</Link>
-                    </div>
-
-                    <div className="navbar-categories">
-                        {categories.slice(3).map((category, idx) => (
-                            <div key={category.name} className="category" onMouseEnter={() => handleMouseEnterCategory(idx + 3)}>
-                                <button className="category-button">{category.name}</button>
-                                {activeCategory === idx + 3 && (
-                                    <div className="submenu">
-                                        {category.subcategories.map((sub, subIdx) => (
-                                            <div key={subIdx} className="submenu-item">
-                                                {typeof sub === 'string' ? sub : sub.name}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
                     </div>
                 </div>
 
                 <div className="navbar-right">
-                    <div className="icon-container account-icon" onClick={handleAccountClick}>
-                        <FaUser className="icon" />
-                        <span className="icon-name">Mon Compte</span>
+                    {/* Dashboard button for admin */}
+                    {userRole === 'admin' && (
+                        <button
+                            className="dashboard-button"
+                            onClick={() => navigate('/admin')}
+                            title="Admin Dashboard"
+                        >
+                            Dashboard
+                        </button>
+                    )}
+
+                    <div
+                        className="icon-container search-icon-container"
+                        title="Search"
+                        onClick={() => alert('Search clicked!')}
+                    >
+                        <FaSearch className="icon" />
+                        <span className="icon-name">Search</span>
                     </div>
+
+                    {isLoggedIn ? (
+                        <div
+                            className="icon-container account-icon"
+                            onClick={handleLogout}
+                            style={{ cursor: 'pointer' }}
+                            title="Logout"
+                        >
+                            <FaUser className="icon" />
+                            <span className="icon-name">Logout</span>
+                        </div>
+                    ) : (
+                        <div
+                            className="icon-container account-icon"
+                            onClick={handleAccountClick}
+                            style={{ cursor: 'pointer' }}
+                            title="Login"
+                        >
+                            <FaUser className="icon" />
+                            <span className="icon-name">Mon Compte</span>
+                        </div>
+                    )}
+
                     <div className="icon-container">
                         <FaShoppingBag className="icon" />
                         {cartItems > 0 && <span className="cart-count">{cartItems}</span>}

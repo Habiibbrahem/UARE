@@ -38,26 +38,7 @@
     margin: 0 auto;
 }
 
-.navbar-left {
-    display: flex;
-    align-items: center;
-    flex: 1;
-}
-
-.search-icon {
-    font-size: 1.4rem;
-    cursor: pointer;
-    color: var(--text-dark);
-    transition: all var(--transition-speed) ease;
-    padding: 0.5rem;
-    border-radius: 50%;
-}
-
-.search-icon:hover {
-    color: var(--accent-hover);
-    transform: scale(1.1);
-    background: var(--hover-effect);
-}
+/* Removed old .navbar-left to eliminate old search icon */
 
 .navbar-center {
     display: flex;
@@ -407,4 +388,25 @@ body.modal-open {
     width: 100%;
     height: 10px;
     background: transparent;
+}
+
+.dashboard-button {
+    background-color: var(--accent);
+    border: none;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+    margin-right: 0.8rem;
+    height: 36px;
+    align-self: center;
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+}
+
+.dashboard-button:hover {
+    background-color: var(--accent-hover);
 }

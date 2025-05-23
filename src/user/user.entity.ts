@@ -18,3 +18,14 @@ export class User extends Document {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Virtual populate to get stores owned by this user
+UserSchema.virtual('stores', {
+    ref: 'Store',
+    localField: '_id',
+    foreignField: 'ownerId',
+    justOne: false,
+});
+
+UserSchema.set('toObject', { virtuals: true });
+UserSchema.set('toJSON', { virtuals: true });
