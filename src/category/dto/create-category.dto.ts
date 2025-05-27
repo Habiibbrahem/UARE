@@ -1,15 +1,19 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsMongoId, IsString } from 'class-validator';
 
 export class CreateCategoryDto {
-    @IsString()
     @IsNotEmpty()
+    @IsString()
     name: string;
 
-    @IsString()
     @IsOptional()
+    @IsString()
     description?: string;
 
-    @IsString()
     @IsOptional()
+    @IsMongoId()
+    parentId?: string;  // optional parent category ID
+
+    @IsOptional()
+    @IsString()
     image?: string;
 }

@@ -74,16 +74,12 @@ export class ProductController {
     return this.productService.findByCategory(categoryId);
   }
 
-  @Get('subcategory/:subcategoryId')
-  findBySubcategory(@Param('subcategoryId') subcategoryId: string) {
-    return this.productService.findBySubcategory(subcategoryId);
-  }
+  // Removed subcategory related endpoint
 
   @Get('search/filter')
   filterProducts(
     @Query('storeId') storeId?: string,
     @Query('categoryId') categoryId?: string,
-    @Query('subcategoryId') subcategoryId?: string,
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string
   ) {
@@ -91,7 +87,6 @@ export class ProductController {
 
     if (storeId) filter.storeId = storeId;
     if (categoryId) filter.categoryId = categoryId;
-    if (subcategoryId) filter.subcategoryId = subcategoryId;
 
     if (minPrice || maxPrice) {
       filter.price = {};

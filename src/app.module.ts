@@ -1,5 +1,5 @@
 import { Module, Logger } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose'; 
+import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
@@ -8,13 +8,13 @@ import { ProductModule } from './product/product.module';
 import { OrdersModule } from './orders/orders.module';
 import { ConfigModule } from '@nestjs/config';
 import { CategoryModule } from './category/category.module';
-import { SubcategoryModule } from './subcategory/subcategory.module';
+// Removed SubcategoryModule import
 
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
 
-        MongooseModule.forRoot('mongodb://localhost:27017/pfe'), 
+        MongooseModule.forRoot('mongodb://localhost:27017/pfe'),
 
         AdminModule,
         UserModule,
@@ -23,7 +23,7 @@ import { SubcategoryModule } from './subcategory/subcategory.module';
         ProductModule,
         OrdersModule,
         CategoryModule,
-        SubcategoryModule,
+        // Removed SubcategoryModule
     ],
     controllers: [],
     providers: [],

@@ -18,18 +18,27 @@ import {
     Tooltip,
     CircularProgress,
     Typography,
+    Select,
+    MenuItem,
+    InputLabel,
+    FormControl,
 } from '@mui/material';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Edit, Delete, ExpandMore, ExpandLess } from '@mui/icons-material';
 import axios from 'axios';
+
+const API_BASE = 'http://localhost:3000';
 
 export default function CategoriesManagement() {
     const [categories, setCategories] = useState([]);
+    const [tree, setTree] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
     const [error, setError] = useState(null);
+    const [expandedIds, setExpandedIds] = useState(new Set());
 
+    // Fetch categories
     const fetchCategories = async () => {
         setFetching(true);
         setError(null);
@@ -41,28 +50,104 @@ export default function CategoriesManagement() {
                 setFetching(false);
                 return;
             }
-            const res = await axios.get('http://localhost:3000/categories', {
+            const res = await axios.get(`${API_BASE}/categories`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('Categories fetched:', res.data);
             setCategories(res.data);
         } catch (error) {
-            console.error('Error fetching categories:', error);
             setError('Failed to fetch categories');
             setCategories([]);
         }
         setFetching(false);
     };
 
+    // Convert flat categories list to tree using parentId
+    const buildTree = (list) => {
+        const map = {};
+        const roots = [];
+
+        list.forEach((cat) => {
+            map[cat._id] = { ...cat, children: [] };
+        });
+
+        list.forEach((cat) => {
+            if (cat.parentId) {
+                if (map[cat.parentId]) {
+                    map[cat.parentId].children.push(map[cat._id]);
+                } else {
+                    // parentId missing (orphan), treat as root
+                    roots.push(map[cat._id]);
+                }
+            } else {
+                // no parentId => root category
+                roots.push(map[cat._id]);
+            }
+        });
+
+        return roots;
+    };
+
     useEffect(() => {
         fetchCategories();
     }, []);
 
+    useEffect(() => {
+        setTree(buildTree(categories));
+    }, [categories]);
+
+    const toggleExpand = (id) => {
+        const newExpanded = new Set(expandedIds);
+        if (newExpanded.has(id)) {
+            newExpanded.delete(id);
+        } else {
+            newExpanded.add(id);
+        }
+        setExpandedIds(newExpanded);
+    };
+
+    // Recursive rendering of categories tree
+    const renderRows = (nodes, level = 0) =>
+        nodes.map((cat) => (
+            <React.Fragment key={cat._id}>
+                <TableRow>
+                    <TableCell style={{ paddingLeft: 20 * level }}>
+                        {cat.children.length > 0 && (
+                            <IconButton size="small" onClick={() => toggleExpand(cat._id)}>
+                                {expandedIds.has(cat._id) ? <ExpandLess /> : <ExpandMore />}
+                            </IconButton>
+                        )}
+                        {!cat.children.length && <span style={{ width: 40, display: 'inline-block' }}></span>}
+                        {cat.name}
+                    </TableCell>
+                    <TableCell>{cat.description || '-'}</TableCell>
+                    <TableCell>{cat.parentId ? categories.find(c => c._id === cat.parentId)?.name || '-' : 'Root'}</TableCell>
+                    <TableCell align="right">
+                        <Tooltip title="Edit">
+                            <IconButton onClick={() => handleOpenDialog(cat)}>
+                                <Edit />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                            <IconButton color="error" onClick={() => handleDelete(cat._id)}>
+                                <Delete />
+                            </IconButton>
+                        </Tooltip>
+                    </TableCell>
+                </TableRow>
+                {cat.children.length > 0 && expandedIds.has(cat._id) && renderRows(cat.children, level + 1)}
+            </React.Fragment>
+        ));
+
     const handleOpenDialog = (category = null) => {
         if (category) {
-            setSelectedCategory(category);
+            setSelectedCategory({
+                _id: category._id,
+                name: category.name,
+                description: category.description || '',
+                parentId: category.parentId || '',
+            });
         } else {
-            setSelectedCategory({ name: '', description: '' });
+            setSelectedCategory({ name: '', description: '', parentId: '' });
         }
         setOpenDialog(true);
     };
@@ -89,23 +174,26 @@ export default function CategoriesManagement() {
                 setLoading(false);
                 return;
             }
+
+            const payload = {
+                name: selectedCategory.name,
+                description: selectedCategory.description,
+                parentId: selectedCategory.parentId || null,
+            };
+
             if (selectedCategory._id) {
-                await axios.put(
-                    `http://localhost:3000/categories/${selectedCategory._id}`,
-                    selectedCategory,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
+                await axios.put(`${API_BASE}/categories/${selectedCategory._id}`, payload, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
             } else {
-                await axios.post(
-                    'http://localhost:3000/categories',
-                    selectedCategory,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
+                await axios.post(`${API_BASE}/categories`, payload, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
             }
+
             await fetchCategories();
             handleCloseDialog();
         } catch (error) {
-            console.error('Error saving category:', error);
             alert('Failed to save category');
         }
         setLoading(false);
@@ -119,12 +207,11 @@ export default function CategoriesManagement() {
                 alert('User not authenticated');
                 return;
             }
-            await axios.delete(`http://localhost:3000/categories/${id}`, {
+            await axios.delete(`${API_BASE}/categories/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             await fetchCategories();
         } catch (error) {
-            console.error('Error deleting category:', error);
             alert('Failed to delete category');
         }
     };
@@ -135,12 +222,7 @@ export default function CategoriesManagement() {
                 Categories Management
             </Typography>
 
-            <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => handleOpenDialog()}
-                sx={{ mb: 2 }}
-            >
+            <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog()} sx={{ mb: 2 }}>
                 Add Category
             </Button>
 
@@ -161,32 +243,11 @@ export default function CategoriesManagement() {
                             <TableRow>
                                 <TableCell>Name</TableCell>
                                 <TableCell>Description</TableCell>
+                                <TableCell>Parent Category</TableCell>
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
-                        <TableBody>
-                            {categories.map((cat) => (
-                                <TableRow key={cat._id}>
-                                    <TableCell>{cat.name}</TableCell>
-                                    <TableCell>{cat.description}</TableCell>
-                                    <TableCell align="right">
-                                        <Tooltip title="Edit">
-                                            <IconButton onClick={() => handleOpenDialog(cat)}>
-                                                <Edit />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Delete">
-                                            <IconButton
-                                                color="error"
-                                                onClick={() => handleDelete(cat._id)}
-                                            >
-                                                <Delete />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
+                        <TableBody>{renderRows(tree)}</TableBody>
                     </Table>
                 </TableContainer>
             )}
@@ -211,6 +272,26 @@ export default function CategoriesManagement() {
                         onChange={handleInputChange}
                         fullWidth
                     />
+                    <FormControl fullWidth margin="dense">
+                        <InputLabel id="parent-category-label">Parent Category</InputLabel>
+                        <Select
+                            labelId="parent-category-label"
+                            label="Parent Category"
+                            name="parentId"
+                            value={selectedCategory?.parentId || ''}
+                            onChange={handleInputChange}
+                            displayEmpty
+                        >
+                            <MenuItem value="">None (Root category)</MenuItem>
+                            {categories
+                                .filter((cat) => cat._id !== selectedCategory?._id) // exclude self to prevent loops
+                                .map((cat) => (
+                                    <MenuItem key={cat._id} value={cat._id}>
+                                        {cat.name}
+                                    </MenuItem>
+                                ))}
+                        </Select>
+                    </FormControl>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>Cancel</Button>

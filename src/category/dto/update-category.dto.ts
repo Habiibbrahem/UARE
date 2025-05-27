@@ -1,15 +1,19 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsOptional, IsMongoId, IsString } from 'class-validator';
 
 export class UpdateCategoryDto {
-    @IsString()
     @IsOptional()
+    @IsString()
     name?: string;
 
-    @IsString()
     @IsOptional()
+    @IsString()
     description?: string;
 
-    @IsString()
     @IsOptional()
+    @IsMongoId()
+    parentId?: string;
+
+    @IsOptional()
+    @IsString()
     image?: string;
 }

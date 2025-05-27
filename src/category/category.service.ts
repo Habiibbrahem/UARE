@@ -12,32 +12,55 @@ export class CategoryService {
     ) { }
 
     async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
-        const createdCategory = new this.categoryModel(createCategoryDto);
-        return createdCategory.save();
+        const categoryData: any = {
+            name: createCategoryDto.name,
+            description: createCategoryDto.description,
+            image: createCategoryDto.image,
+            parent: createCategoryDto.parentId || null,  // Map parentId to parent
+        };
+
+        const created = new this.categoryModel(categoryData);
+        return created.save();
     }
 
     async findAll(): Promise<Category[]> {
-        return this.categoryModel.find().exec();
+        // Return only root categories with children populated recursively
+        return this.categoryModel.find({ parent: null }).populate('children').exec();
+    }
+
+    async findChildren(parentId: string): Promise<Category[]> {
+        if (!Types.ObjectId.isValid(parentId)) {
+            throw new NotFoundException('Invalid parent category ID');
+        }
+        return this.categoryModel.find({ parent: parentId }).populate('children').exec();
     }
 
     async findOne(id: string): Promise<Category> {
         if (!Types.ObjectId.isValid(id)) {
             throw new NotFoundException('Invalid category ID');
         }
-        const category = await this.categoryModel.findById(id).exec();
+        const category = await this.categoryModel.findById(id).populate('children').exec();
         if (!category) {
             throw new NotFoundException('Category not found');
         }
         return category;
     }
 
-    async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category | null> {
+    async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
         if (!Types.ObjectId.isValid(id)) {
             throw new NotFoundException('Invalid category ID');
         }
-        const updated = await this.categoryModel
-            .findByIdAndUpdate(id, updateCategoryDto, { new: true })
-            .exec();
+
+        const updateData: any = {
+            ...updateCategoryDto,
+        };
+
+        if ('parentId' in updateCategoryDto) {
+            updateData.parent = updateCategoryDto.parentId || null;
+            delete updateData.parentId;
+        }
+
+        const updated = await this.categoryModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
         if (!updated) {
             throw new NotFoundException('Category not found');
         }

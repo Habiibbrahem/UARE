@@ -1,23 +1,58 @@
+// src/components/Navbar.jsx
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaUser, FaShoppingBag, FaChevronRight } from 'react-icons/fa';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
 import LoginModal from './LoginModal';
 import SignupModal from './SignupModal';
 import axios from 'axios';
 import './Navbar.css';
 
+const API_BASE = 'http://localhost:3000';
+
+const RecursiveDropdown = ({ categories }) => {
+    const [activeIndex, setActiveIndex] = useState(null);
+
+    if (!categories || categories.length === 0) return null;
+
+    return (
+        <div className="navbar-categories">
+            {categories.map((cat, idx) => (
+                <div
+                    key={cat._id}
+                    className="category"
+                    onMouseEnter={() => setActiveIndex(idx)}
+                    onMouseLeave={() => setActiveIndex(null)}
+                >
+                    <button className="category-button">
+                        {cat.name}
+                        {cat.children && cat.children.length > 0 && (
+                            <FaChevronRight style={{ marginLeft: 6 }} />
+                        )}
+                    </button>
+
+                    {activeIndex === idx && cat.children && cat.children.length > 0 && (
+                        <div className="submenu">
+                            <RecursiveDropdown categories={cat.children} />
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+};
+
 const Navbar = () => {
     const [categories, setCategories] = useState([]);
-    const [activeCategory, setActiveCategory] = useState(null);
-    const [hoverTimeout, setHoverTimeout] = useState(null);
     const [cartItems] = useState(3);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showSignupModal, setShowSignupModal] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
+
     const navigate = useNavigate();
+    const location = useLocation();
 
     const getUserRoleFromToken = (token) => {
         try {
@@ -28,76 +63,52 @@ const Navbar = () => {
         }
     };
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    setCategories([]);
-                    return;
-                }
-                const res = await axios.get('http://localhost:3000/categories', {
+    const fetchCategories = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = token
+                ? await axios.get(`${API_BASE}/categories`, {
                     headers: { Authorization: `Bearer ${token}` },
-                });
-                const cats = res.data.map(cat => ({
-                    ...cat,
-                    subcategories: cat.subcategories || [],
-                }));
-                setCategories(cats);
-            } catch (error) {
-                console.error('Failed to fetch categories:', error);
-            }
-        };
+                })
+                : await axios.get(`${API_BASE}/categories`);
+            setCategories(res.data);
+        } catch (err) {
+            console.error('Failed to fetch categories:', err);
+            setCategories([]);
+        }
+    };
+
+    // Initial load
+    useEffect(() => {
         fetchCategories();
     }, []);
 
+    // Re-fetch on login status change
+    useEffect(() => {
+        fetchCategories();
+    }, [isLoggedIn]);
+
+    // Listen for login/logout events from storage
     useEffect(() => {
         const token = localStorage.getItem('token');
         setIsLoggedIn(!!token);
-        if (token) setUserRole(getUserRoleFromToken(token));
-        else setUserRole(null);
-    }, []);
+        setUserRole(token ? getUserRoleFromToken(token) : null);
 
-    useEffect(() => {
-        const handleStorage = () => {
-            const token = localStorage.getItem('token');
-            setIsLoggedIn(!!token);
-            if (token) setUserRole(getUserRoleFromToken(token));
-            else setUserRole(null);
+        const onStorage = () => {
+            const t = localStorage.getItem('token');
+            setIsLoggedIn(!!t);
+            setUserRole(t ? getUserRoleFromToken(t) : null);
         };
-        window.addEventListener('storage', handleStorage);
-        return () => window.removeEventListener('storage', handleStorage);
+        window.addEventListener('storage', onStorage);
+        return () => window.removeEventListener('storage', onStorage);
     }, []);
 
+    // Navbar shadow on scroll
     useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 10);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        const onScroll = () => setIsScrolled(window.scrollY > 10);
+        window.addEventListener('scroll', onScroll);
+        return () => window.removeEventListener('scroll', onScroll);
     }, []);
-
-    useEffect(() => {
-        if (showLoginModal || showSignupModal) {
-            document.body.classList.add('modal-open');
-        } else {
-            document.body.classList.remove('modal-open');
-        }
-    }, [showLoginModal, showSignupModal]);
-
-    const handleMouseEnterCategory = (idx) => {
-        clearTimeout(hoverTimeout);
-        setActiveCategory(idx);
-    };
-
-    const handleMouseLeaveNav = () => {
-        const timeout = setTimeout(() => setActiveCategory(null), 200);
-        setHoverTimeout(timeout);
-    };
-
-    const handleAccountClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setShowLoginModal(true);
-    };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -108,54 +119,22 @@ const Navbar = () => {
 
     return (
         <header className={`navbar-container ${isScrolled ? 'scrolled' : ''}`}>
-            <nav className="navbar" onMouseLeave={handleMouseLeaveNav}>
+            <nav className="navbar">
                 <div className="navbar-center">
-                    <div className="navbar-categories">
-                        {categories.map((category, idx) => (
-                            <div
-                                key={category._id || category.name}
-                                className="category"
-                                onMouseEnter={() => handleMouseEnterCategory(idx)}
-                            >
-                                <button className="category-button">{category.name}</button>
-                                {activeCategory === idx && category.subcategories.length > 0 && (
-                                    <div className="submenu">
-                                        {category.subcategories.map((sub, subIdx) => (
-                                            <div key={sub._id || subIdx} className="submenu-item-container">
-                                                <div className="submenu-item">
-                                                    {sub.name || sub}
-                                                    {sub.items && sub.items.length > 0 && (
-                                                        <FaChevronRight className="submenu-arrow" />
-                                                    )}
-                                                </div>
-                                                {sub.items && sub.items.length > 0 && (
-                                                    <div className="sub-submenu">
-                                                        <div className="sub-submenu-header">
-                                                            <h4>{sub.name}</h4>
-                                                        </div>
-                                                        <div className="sub-submenu-items">
-                                                            {sub.items.map((item, itemIdx) => (
-                                                                <div key={itemIdx} className="sub-submenu-item">
-                                                                    {item}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                    {location.pathname === '/' ? (
+                        categories.length ? (
+                            <RecursiveDropdown categories={categories} />
+                        ) : (
+                            <div>No Categories Available</div>
+                        )
+                    ) : null}
+
                     <div className="navbar-logo">
                         <Link to="/">UARE COLLECTION</Link>
                     </div>
                 </div>
 
                 <div className="navbar-right">
-                    {/* Dashboard button for admin */}
                     {userRole === 'admin' && (
                         <button
                             className="dashboard-button"
@@ -178,9 +157,8 @@ const Navbar = () => {
                     {isLoggedIn ? (
                         <div
                             className="icon-container account-icon"
-                            onClick={handleLogout}
-                            style={{ cursor: 'pointer' }}
                             title="Logout"
+                            onClick={handleLogout}
                         >
                             <FaUser className="icon" />
                             <span className="icon-name">Logout</span>
@@ -188,9 +166,8 @@ const Navbar = () => {
                     ) : (
                         <div
                             className="icon-container account-icon"
-                            onClick={handleAccountClick}
-                            style={{ cursor: 'pointer' }}
                             title="Login"
+                            onClick={() => setShowLoginModal(true)}
                         >
                             <FaUser className="icon" />
                             <span className="icon-name">Mon Compte</span>

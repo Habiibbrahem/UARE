@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Product } from 'src/product/entities/product.entity';
 
 @Schema({ timestamps: true })
 export class Category extends Document {
@@ -8,13 +7,26 @@ export class Category extends Document {
     name: string;
 
     @Prop()
-    description: string;
+    description?: string;
+
+    // Use "parent" internally but map from "parentId" in DTOs
+    @Prop({ type: Types.ObjectId, ref: 'Category', default: null })
+    parent?: Types.ObjectId | null;
 
     @Prop()
-    image: string;
-
-    @Prop({ type: [{ type: Types.ObjectId, ref: 'Product' }] })
-    products: Product[];
+    image?: string;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
+
+// Virtual to get child categories
+CategorySchema.virtual('children', {
+    ref: 'Category',
+    localField: '_id',
+    foreignField: 'parent',
+    justOne: false,
+});
+
+// Enable virtuals in JSON and Object output
+CategorySchema.set('toObject', { virtuals: true });
+CategorySchema.set('toJSON', { virtuals: true });

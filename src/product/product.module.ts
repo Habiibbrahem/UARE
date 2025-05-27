@@ -5,7 +5,6 @@ import { ProductService } from './product.service';
 import { ProductController } from './product.controller';
 import { Store, StoreSchema } from '../store/entities/store.entity';
 import { CategoryModule } from '../category/category.module';
-import { SubcategoryModule } from '../subcategory/subcategory.module';
 
 @Module({
   imports: [
@@ -13,8 +12,7 @@ import { SubcategoryModule } from '../subcategory/subcategory.module';
       { name: Product.name, schema: ProductSchema },
       { name: Store.name, schema: StoreSchema }
     ]),
-    CategoryModule,
-    SubcategoryModule
+    CategoryModule
   ],
   providers: [ProductService],
   controllers: [ProductController],
