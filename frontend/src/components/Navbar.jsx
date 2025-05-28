@@ -10,6 +10,32 @@ import './Navbar.css';
 
 const API_BASE = 'http://localhost:3000';
 
+// Utility to build a tree from flat list (with parent references)
+const buildTree = (categories) => {
+    const map = {};
+    const roots = [];
+
+    categories.forEach(cat => {
+        map[cat._id] = { ...cat, children: [] };
+    });
+
+    categories.forEach(cat => {
+        if (cat.parent) {
+            if (map[cat.parent]) {
+                map[cat.parent].children.push(map[cat._id]);
+            } else {
+                // parent not found? treat as root
+                roots.push(map[cat._id]);
+            }
+        } else {
+            roots.push(map[cat._id]);
+        }
+    });
+
+    return roots;
+};
+
+// Recursive component for multi-level dropdown
 const RecursiveDropdown = ({ categories }) => {
     const [activeIndex, setActiveIndex] = useState(null);
 
@@ -33,6 +59,7 @@ const RecursiveDropdown = ({ categories }) => {
 
                     {activeIndex === idx && cat.children && cat.children.length > 0 && (
                         <div className="submenu">
+                            {/* Recursive call */}
                             <RecursiveDropdown categories={cat.children} />
                         </div>
                     )}
@@ -44,6 +71,7 @@ const RecursiveDropdown = ({ categories }) => {
 
 const Navbar = () => {
     const [categories, setCategories] = useState([]);
+    const [categoryTree, setCategoryTree] = useState([]);
     const [cartItems] = useState(3);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showSignupModal, setShowSignupModal] = useState(false);
@@ -78,17 +106,19 @@ const Navbar = () => {
         }
     };
 
-    // Initial load
     useEffect(() => {
         fetchCategories();
     }, []);
 
-    // Re-fetch on login status change
+    // Build tree whenever categories change
+    useEffect(() => {
+        setCategoryTree(buildTree(categories));
+    }, [categories]);
+
     useEffect(() => {
         fetchCategories();
     }, [isLoggedIn]);
 
-    // Listen for login/logout events from storage
     useEffect(() => {
         const token = localStorage.getItem('token');
         setIsLoggedIn(!!token);
@@ -103,7 +133,6 @@ const Navbar = () => {
         return () => window.removeEventListener('storage', onStorage);
     }, []);
 
-    // Navbar shadow on scroll
     useEffect(() => {
         const onScroll = () => setIsScrolled(window.scrollY > 10);
         window.addEventListener('scroll', onScroll);
@@ -122,8 +151,8 @@ const Navbar = () => {
             <nav className="navbar">
                 <div className="navbar-center">
                     {location.pathname === '/' ? (
-                        categories.length ? (
-                            <RecursiveDropdown categories={categories} />
+                        categoryTree.length ? (
+                            <RecursiveDropdown categories={categoryTree} />
                         ) : (
                             <div>No Categories Available</div>
                         )
@@ -140,6 +169,16 @@ const Navbar = () => {
                             className="dashboard-button"
                             onClick={() => navigate('/admin')}
                             title="Admin Dashboard"
+                        >
+                            Dashboard
+                        </button>
+                    )}
+
+                    {userRole === 'store_owner' && (
+                        <button
+                            className="dashboard-button"
+                            onClick={() => navigate('/store-owner')}
+                            title="Store Owner Dashboard"
                         >
                             Dashboard
                         </button>

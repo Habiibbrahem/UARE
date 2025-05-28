@@ -42,6 +42,11 @@ export class OrdersService {
         return order;
     }
 
+    // NEW: Find orders by storeId
+    async findByStore(storeId: string): Promise<Order[]> {
+        return this.orderModel.find({ storeId }).exec();
+    }
+
     async updateStatus(id: string, status: string): Promise<Order | null> {
         const order = await this.orderModel.findById(id).exec();
         if (!order) {
@@ -51,13 +56,11 @@ export class OrdersService {
         const currentStatusIndex = OrderStatusFlow.indexOf(order.status as OrderStatus);
         const newStatusIndex = OrderStatusFlow.indexOf(status as OrderStatus);
 
-        if (newStatusIndex === -1 ||
-            (newStatusIndex !== 0 && newStatusIndex < currentStatusIndex)) {
+        if (newStatusIndex === -1 || (newStatusIndex !== 0 && newStatusIndex < currentStatusIndex)) {
             throw new BadRequestException('Invalid status transition');
         }
 
-        if (status === OrderStatus.DELIVERED &&
-            order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY) {
+        if (status === OrderStatus.DELIVERED && order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY) {
             order.paymentStatus = PaymentStatus.PAID;
             order.deliveredAt = new Date();
         }

@@ -53,7 +53,12 @@ export default function CategoriesManagement() {
             const res = await axios.get(`${API_BASE}/categories`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setCategories(res.data);
+            // Map backend 'parent' field to 'parentId' for frontend
+            const categoriesWithParentId = res.data.map(cat => ({
+                ...cat,
+                parentId: cat.parent || null,
+            }));
+            setCategories(categoriesWithParentId);
         } catch (error) {
             setError('Failed to fetch categories');
             setCategories([]);
@@ -61,25 +66,23 @@ export default function CategoriesManagement() {
         setFetching(false);
     };
 
-    // Convert flat categories list to tree using parentId
+    // Build tree from flat list
     const buildTree = (list) => {
         const map = {};
         const roots = [];
 
-        list.forEach((cat) => {
+        list.forEach(cat => {
             map[cat._id] = { ...cat, children: [] };
         });
 
-        list.forEach((cat) => {
+        list.forEach(cat => {
             if (cat.parentId) {
                 if (map[cat.parentId]) {
                     map[cat.parentId].children.push(map[cat._id]);
                 } else {
-                    // parentId missing (orphan), treat as root
                     roots.push(map[cat._id]);
                 }
             } else {
-                // no parentId => root category
                 roots.push(map[cat._id]);
             }
         });
@@ -105,9 +108,8 @@ export default function CategoriesManagement() {
         setExpandedIds(newExpanded);
     };
 
-    // Recursive rendering of categories tree
     const renderRows = (nodes, level = 0) =>
-        nodes.map((cat) => (
+        nodes.map(cat => (
             <React.Fragment key={cat._id}>
                 <TableRow>
                     <TableCell style={{ paddingLeft: 20 * level }}>
@@ -174,13 +176,11 @@ export default function CategoriesManagement() {
                 setLoading(false);
                 return;
             }
-
             const payload = {
                 name: selectedCategory.name,
                 description: selectedCategory.description,
                 parentId: selectedCategory.parentId || null,
             };
-
             if (selectedCategory._id) {
                 await axios.put(`${API_BASE}/categories/${selectedCategory._id}`, payload, {
                     headers: { Authorization: `Bearer ${token}` },
@@ -190,7 +190,6 @@ export default function CategoriesManagement() {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             }
-
             await fetchCategories();
             handleCloseDialog();
         } catch (error) {
@@ -284,8 +283,8 @@ export default function CategoriesManagement() {
                         >
                             <MenuItem value="">None (Root category)</MenuItem>
                             {categories
-                                .filter((cat) => cat._id !== selectedCategory?._id) // exclude self to prevent loops
-                                .map((cat) => (
+                                .filter(cat => cat._id !== selectedCategory?._id) // exclude self
+                                .map(cat => (
                                     <MenuItem key={cat._id} value={cat._id}>
                                         {cat.name}
                                     </MenuItem>

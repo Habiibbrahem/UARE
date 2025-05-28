@@ -1,5 +1,22 @@
+// src/components/dashboards/StoreOwnerDashboard.jsx
 import React from 'react';
+import StoreOwnerLayout from './StoreOwnerLayout';
+import MembersManagement from './MembersManagement';
+import OrdersManagement from './OrdersManagement';
 
 export default function StoreOwnerDashboard() {
-    return <h1>Store Owner Dashboard</h1>;
+    return (
+        <StoreOwnerLayout>
+            {(selectedKey) => {
+                switch (selectedKey) {
+                    case 'members':
+                        return <MembersManagement />;
+                    case 'orders':
+                        return <OrdersManagement />;
+                    default:
+                        return <div>Select a section from the sidebar</div>;
+                }
+            }}
+        </StoreOwnerLayout>
+    );
 }

@@ -17,14 +17,10 @@ export class CategoryController {
         return this.categoryService.create(createCategoryDto);
     }
 
-    // Public route: get categories
-    // Optional query param to get children of a parent category
+    // Public route: get categories with optional parentId filter
     @Get()
     findAll(@Query('parentId') parentId?: string) {
-        if (parentId) {
-            return this.categoryService.findChildren(parentId);
-        }
-        return this.categoryService.findAll();
+        return this.categoryService.findAll(parentId);
     }
 
     @Get(':id')

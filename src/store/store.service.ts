@@ -11,7 +11,7 @@ export class StoreService {
 
     async findAll(): Promise<Store[]> {
         return this.storeModel.find()
-            .populate('ownerId', 'name email') // populate owner with minimal fields
+            .populate('ownerId', 'name email')
             .exec();
     }
 
@@ -63,6 +63,33 @@ export class StoreService {
         }
 
         return store;
+    }
+
+    async removeMember(storeId: string | Types.ObjectId, userId: string | Types.ObjectId): Promise<Store> {
+        const storeObjectId = typeof storeId === 'string' ? new Types.ObjectId(storeId) : storeId;
+        const userObjectId = typeof userId === 'string' ? new Types.ObjectId(userId) : userId;
+
+        const store = await this.findOne(storeObjectId.toString());
+
+        const memberIndex = store.members.findIndex(member => member.equals(userObjectId));
+        if (memberIndex === -1) {
+            throw new NotFoundException('Member not found in store');
+        }
+
+        store.members.splice(memberIndex, 1);
+        await store.save();
+
+        return store;
+    }
+
+    async findStoresByOwner(ownerId: string | Types.ObjectId): Promise<Store[]> {
+        const ownerObjectId =
+            typeof ownerId === 'string' ? new Types.ObjectId(ownerId) : ownerId;
+
+        return this.storeModel
+            .find({ ownerId: ownerObjectId })
+            .populate('members', 'name email')   // <-- populate members now
+            .exec();
     }
 
     async findOneWithOwner(id: string): Promise<Store | null> {

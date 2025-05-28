@@ -11,11 +11,10 @@ import {
     Get,
     UseInterceptors,
     UploadedFile,
-
-    NotFoundException // Add this import
+    NotFoundException,
+    ForbiddenException,
 } from '@nestjs/common';
-import { StoreService } from './store.service'; // Add this import
-
+import { StoreService } from './store.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { AddMemberDto } from './dto/add-member.dto';
@@ -27,7 +26,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { User } from '../user/user.entity';
 import { Types } from 'mongoose';
-import { ForbiddenException } from '@nestjs/common';
 
 interface RequestWithUser extends Request {
     user: User & { _id: Types.ObjectId };
@@ -72,27 +70,25 @@ export class StoreController {
     @UseInterceptors(FileInterceptor('image'))
     uploadImage(@UploadedFile() file: Express.Multer.File) {
         return {
-            imageUrl: `/uploads/stores/${file.filename}`
+            imageUrl: `/uploads/stores/${file.filename}`,
         };
     }
 
-    // In store.controller.ts
+    // Add a member to a store (Store Owner only)
     @Post(':id/members')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @RequireRoles(Roles.STORE_OWNER)
     async addMember(
         @Param('id') storeId: string,
         @Body() addMemberDto: AddMemberDto,
-        @Req() req: RequestWithUser
+        @Req() req: RequestWithUser,
     ) {
-        // First get the store with owner populated
         const store = await this.storeService.findOneWithOwner(storeId);
 
         if (!store) {
             throw new NotFoundException('Store not found');
         }
 
-        // Convert to ObjectId for safe comparison
         const currentUserId = new Types.ObjectId(req.user._id);
 
         if (!store.ownerId || !store.ownerId.equals(currentUserId)) {
@@ -106,19 +102,56 @@ export class StoreController {
         return this.storeService.addMember(storeId, addMemberDto.userId);
     }
 
+    // Remove a member from a store (Store Owner only)
+    @Delete(':id/members/:userId')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @RequireRoles(Roles.STORE_OWNER)
+    async removeMember(
+        @Param('id') storeId: string,
+        @Param('userId') userId: string,
+        @Req() req: RequestWithUser,
+    ) {
+        const store = await this.storeService.findOneWithOwner(storeId);
+
+        if (!store) {
+            throw new NotFoundException('Store not found');
+        }
+
+        const currentUserId = new Types.ObjectId(req.user._id);
+
+        if (!store.ownerId || !store.ownerId.equals(currentUserId)) {
+            throw new ForbiddenException('Only store owner can remove members');
+        }
+
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new BadRequestException('Invalid user ID format');
+        }
+
+        return this.storeService.removeMember(storeId, userId);
+    }
+
+    // Assign an owner to a store (Admin only)
     @Put(':storeId/assign/:userId')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @RequireRoles(Roles.ADMIN)
     async assignOwnerToStore(
         @Param('storeId') storeId: string,
-        @Param('userId') userId: string
+        @Param('userId') userId: string,
     ) {
         const store = await this.storeService.findOne(storeId);
         if (store.ownerId) {
-            throw new Error('Store already has an owner');
+            throw new BadRequestException('Store already has an owner');
         }
-        store.ownerId = new Types.ObjectId(userId); // Assign store owner here
+        store.ownerId = new Types.ObjectId(userId);
         await store.save();
         return store;
+    }
+
+    // Get all stores owned by the current store owner (Store Owner only)
+    @Get('owner/:ownerId')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @RequireRoles(Roles.STORE_OWNER)
+    async findStoresByOwner(@Param('ownerId') ownerId: string) {
+        return this.storeService.findStoresByOwner(ownerId);
     }
 }

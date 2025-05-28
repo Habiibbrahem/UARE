@@ -63,6 +63,52 @@
     border-color: #ddd;
 }
 
+/* Sub-Subcategories Section */
+.subsubcategories-section {
+    padding: 2rem 5%;
+    background: #eef4ff;
+    max-width: 1400px;
+    margin: 3rem auto 4rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(129, 196, 215, 0.15);
+    text-align: center;
+}
+
+.subsubcategories-section h2 {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.subsubcategories-section ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.subsubcategories-section li {
+    background: #a5d8ff;
+    color: #1a2937;
+    padding: 0.6rem 1.2rem;
+    border-radius: 30px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    font-weight: 600;
+    text-transform: capitalize;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    user-select: none;
+}
+
+.subsubcategories-section li:hover {
+    background: #74c0fc;
+    color: #fff;
+}
+
 /* Services Section */
 .services-section {
     padding: 2rem 5% 3rem;
@@ -148,7 +194,7 @@
     }
 
     .services-container {
-        grid-template-columns: repeat(2, 1fr));
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -173,5 +219,15 @@
 
     .service-card {
         padding: 0.8rem;
+    }
+
+    .subsubcategories-section ul {
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+
+    .subsubcategories-section li {
+        flex-shrink: 0;
+        white-space: nowrap;
     }
 }

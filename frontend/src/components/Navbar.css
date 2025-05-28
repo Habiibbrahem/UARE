@@ -7,8 +7,8 @@
     --text-dark: #495057;
     --text-darker: #212529;
     --hover-effect: rgba(0, 0, 0, 0.05);
-    --transition-speed: 0.2s;
-    --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    --transition-speed: 0.3s;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     --navbar-height: 70px;
 }
 
@@ -20,12 +20,12 @@
     z-index: 9999;
     transition: all 0.3s ease;
     background-color: #fff;
+    box-shadow: none;
 }
 
-/* Navbar becomes more prominent when scrolled */
 .navbar-container.scrolled {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+    backdrop-filter: saturate(180%) blur(10px);
 }
 
 .navbar {
@@ -55,66 +55,72 @@
     gap: 2rem;
     justify-content: center;
     position: relative;
-    z-index: 2;
+    z-index: 10;
 }
 
 .category {
     position: relative;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .category-button {
     font-size: 1rem;
     font-weight: 600;
-    padding: 0.8rem 0.5rem;
+    padding: 0.7rem 1.2rem;
     cursor: pointer;
     color: var(--text-dark);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    transition: all var(--transition-speed) ease;
-    position: relative;
+    transition: color var(--transition-speed) ease;
     background: none;
     border: none;
     display: flex;
     align-items: center;
     gap: 6px;
+    border-radius: 6px;
+    user-select: none;
 }
 
-/* Hover effect on category buttons */
-.category-button:hover {
-    color: var(--text-darker);
+.category-button:hover,
+.category-button:focus {
+    color: var(--accent-hover);
+    background-color: var(--secondary);
+    outline: none;
+    box-shadow: 0 4px 12px rgba(116, 192, 252, 0.3);
 }
 
 .category-button::after {
     content: '';
     position: absolute;
     bottom: 0;
-    left: 0;
+    left: 12%;
     width: 0;
-    height: 2px;
+    height: 2.5px;
     background: var(--accent);
+    border-radius: 2px;
     transition: width var(--transition-speed) ease;
 }
 
 .category-button:hover::after {
-    width: 100%;
+    width: 75%;
 }
 
-/* Recursive submenu styling */
+/* Dropdown base */
 .submenu {
     position: absolute;
-    top: calc(100% + 5px);
+    top: calc(100% + 8px);
     left: 0;
     background: white;
-    border-radius: 8px;
+    border-radius: 10px;
     box-shadow: var(--shadow);
-    padding: 1rem 0;
-    min-width: 280px;
-    z-index: 10;
+    padding: 0.5rem 0;
+    min-width: 260px;
+    z-index: 100;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(5px);
+    transform: translateY(8px);
     transition: all var(--transition-speed) ease;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 /* Show submenu on hover */
@@ -125,63 +131,70 @@
     transform: translateY(0);
 }
 
-/* Adjust nested submenu positioning */
+/* Nested submenu positioning */
 .submenu .submenu {
     top: 0;
     left: 100%;
-    transform: translateX(5px);
+    margin-left: 6px;
+    border-radius: 10px;
+    min-width: 240px;
+    transform: translateX(8px);
 }
 
 .submenu .submenu:hover {
     transform: translateX(0);
 }
 
+/* Submenu item container */
 .submenu-item-container {
     position: relative;
-}
-
-.submenu-item {
-    padding: 0.8rem 1.5rem;
-    cursor: pointer;
-    color: var(--text-dark);
-    transition: all var(--transition-speed) ease;
+    font-size: 0.95rem;
     font-weight: 500;
+    cursor: pointer;
+    padding: 0.55rem 1.5rem;
+    color: var(--text-dark);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+    user-select: none;
 }
 
-/* Hover effect for submenu items */
-.submenu-item:hover {
+/* Hover effect */
+.submenu-item-container:hover {
     background: var(--secondary);
     color: var(--accent-hover);
-    padding-left: 1.8rem;
+    padding-left: 1.9rem;
+    box-shadow: inset 5px 0 0 var(--accent-hover);
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
-/* Chevron icon styling */
+/* Chevron arrow in submenu items */
 .submenu-arrow {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--text-dark);
-    opacity: 0.6;
-    transition: all var(--transition-speed) ease;
+    opacity: 0.5;
+    transition: opacity var(--transition-speed) ease, transform var(--transition-speed) ease;
 }
 
-.submenu-item:hover .submenu-arrow {
+.submenu-item-container:hover .submenu-arrow {
     opacity: 1;
-    transform: translateX(3px);
+    transform: translateX(4px);
 }
 
 /* Navbar logo styling */
 .navbar-logo {
-    font-size: 1.8rem;
+    font-size: 1.85rem;
     font-weight: 700;
     cursor: pointer;
     color: var(--text-darker);
     text-transform: uppercase;
-    transition: all var(--transition-speed) ease;
+    transition: color var(--transition-speed) ease;
     margin: 0 3rem;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     font-family: 'Montserrat', sans-serif;
+    user-select: none;
 }
 
 .navbar-logo a {
@@ -189,7 +202,7 @@
     text-decoration: none;
 }
 
-/* Navbar right section styling */
+/* Navbar right section */
 .navbar-right {
     display: flex;
     align-items: center;
@@ -205,9 +218,10 @@
     align-items: center;
     cursor: pointer;
     padding: 0.6rem;
-    border-radius: 4px;
-    transition: all var(--transition-speed) ease;
+    border-radius: 6px;
+    transition: background-color var(--transition-speed) ease;
     gap: 4px;
+    user-select: none;
 }
 
 .icon-container:hover {
@@ -216,24 +230,24 @@
 
 .icon {
     color: var(--text-dark);
-    font-size: 1.4rem;
-    transition: all var(--transition-speed) ease;
+    font-size: 1.5rem;
+    transition: color var(--transition-speed) ease, transform var(--transition-speed) ease;
 }
 
 .icon-container:hover .icon {
     color: var(--accent-hover);
-    transform: scale(1.1);
+    transform: scale(1.12);
 }
 
 .icon-name {
     position: relative;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     background: transparent;
     padding: 0;
     opacity: 0;
     transition: opacity var(--transition-speed) ease;
     color: var(--text-dark);
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -241,41 +255,48 @@
     opacity: 1;
 }
 
+/* Cart count */
 .cart-count {
     position: absolute;
-    top: 2px;
-    right: 2px;
+    top: 3px;
+    right: 3px;
     background: var(--accent-hover);
     color: white;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
-    font-weight: bold;
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
-/* Modal overlay styling */
+/* Modal overlay */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.45);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 2000;
-    backdrop-filter: blur(3px);
-    animation: fadeIn 0.3s ease;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.35s ease;
 }
 
 .modal-content {
     position: relative;
     z-index: 2001;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+    background-color: #fff;
+    max-width: 420px;
+    width: 100%;
 }
 
 /* Fade-in animation */
@@ -294,19 +315,20 @@ body.modal-open {
     padding-right: 15px;
 }
 
-/* Responsive Styles */
+/* Responsive */
+
 @media (max-width: 1200px) {
     .navbar {
         padding: 0.8rem 2rem;
     }
 
     .navbar-center {
-        gap: 1.5rem;
+        gap: 1.8rem;
     }
 
     .navbar-logo {
         margin: 0 1.5rem;
-        font-size: 1.5rem;
+        font-size: 1.6rem;
     }
 
     .submenu .submenu {
@@ -325,12 +347,12 @@ body.modal-open {
 
     .category-button {
         font-size: 0.9rem;
-        padding: 0.6rem 0.3rem;
+        padding: 0.6rem 0.4rem;
     }
 
     .navbar-logo {
         margin: 0 1rem;
-        font-size: 1.3rem;
+        font-size: 1.4rem;
     }
 
     .navbar-right {
@@ -365,7 +387,7 @@ body.modal-open {
     font-weight: 600;
     font-size: 0.9rem;
     padding: 0.5rem 1rem;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color var(--transition-speed) ease;
     margin-right: 0.8rem;

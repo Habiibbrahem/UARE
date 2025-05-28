@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch, UseGuards, Query } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -28,8 +28,12 @@ export class OrdersController {
         return this.ordersService.findOne(id);
     }
 
+    // Updated: optional storeId query parameter to filter orders by store
     @Get()
-    async getAllOrders() {
+    async getAllOrders(@Query('storeId') storeId?: string) {
+        if (storeId) {
+            return this.ordersService.findByStore(storeId);
+        }
         return this.ordersService.findAll();
     }
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import ImageCarousel from '../components/ImageCarousel';
 import {
@@ -7,27 +7,20 @@ import {
     FaCheckCircle,
     FaHeadset
 } from 'react-icons/fa';
+import axios from 'axios';
 import '../components/Navbar.css';
 import '../components/ImageCarousel.css';
 import './HomePage.css';
 
+const API_BASE = 'http://localhost:3000';
+
 const HomePage = () => {
+    const [subSubCategories, setSubSubCategories] = useState([]);
+
     const categories = [
         { name: "Chaussures, vêtements et accessoires", subtext: "Plus de catégories" },
         { name: "Mode, beauté, luxe et plus" },
-        // Main categories
-        "Manteaux", "Doudounes", "Sweats", "Gilets",
-        "Chemises", "Blouses", "Robes", "Combinaisons",
-        "Jeans", "Sport", "Pyjamas", "Vestes",
-        "Blazers", "Pulls", "Cardigans", "Tops",
-        "T-Shirts", "Polos", "Pantalons", "Jupes",
-        "Shorts", "Sous-vêtements", "Maillots de Bain",
-        // Footwear
-        "Chaussures", "Sneakers", "Bottes", "Bottines",
-        "Escarpins", "Sandales", "Mules", "Tongs",
-        // Accessories
-        "Lunettes", "Montres", "Sacs", "Pochettes",
-        "Casquettes", "Bagagerie"
+        // Removed hardcoded sub-subcategories here!
     ];
 
     const services = [
@@ -53,6 +46,30 @@ const HomePage = () => {
         }
     ];
 
+    useEffect(() => {
+        // Fetch all categories and filter sub-subcategories (depth = 2)
+        const fetchCategories = async () => {
+            try {
+                const res = await axios.get(`${API_BASE}/categories`);
+                const categories = res.data;
+
+                // Filter sub-subcategories: categories with a parent that also has a parent
+                const subSubs = categories.filter(cat => {
+                    if (!cat.parent) return false;
+                    // Find parent category
+                    const parentCat = categories.find(c => c._id === cat.parent);
+                    return parentCat && parentCat.parent !== null;
+                });
+
+                setSubSubCategories(subSubs);
+            } catch (err) {
+                console.error('Failed to fetch categories:', err);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
     return (
         <div className="home-page">
             <Navbar />
@@ -74,6 +91,21 @@ const HomePage = () => {
                         ))}
                     </div>
                 </section>
+
+                {/* New Sub-subcategories Section */}
+                <section className="subsubcategories-section">
+                    <h2>Nos Articles</h2>
+                    {subSubCategories.length === 0 ? (
+                        <p>Aucune sous-sous-catégorie disponible.</p>
+                    ) : (
+                        <ul>
+                            {subSubCategories.map(cat => (
+                                <li key={cat._id}>{cat.name}</li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
+
                 <section className="services-section">
                     <div className="divider-line"></div>
                     <div className="services-container">

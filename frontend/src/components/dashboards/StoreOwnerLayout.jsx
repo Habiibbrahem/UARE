@@ -1,17 +1,16 @@
+// src/components/dashboards/StoreOwnerLayout.jsx
 import React, { useState } from 'react';
 import { Box, Drawer, List, ListItem, ListItemText, Toolbar, Typography } from '@mui/material';
 
 const drawerWidth = 240;
 
-export default function AdminLayout({ children }) {
+export default function StoreOwnerLayout({ children }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     const menuItems = [
-        { label: 'Categories', key: 'categories' }, // <-- Added Categories here
-        { label: 'Store Owners', key: 'storeOwners' },
-        { label: 'Stores', key: 'stores' },
-        { label: 'Assign Store Owner', key: 'assignStoreOwner' },
-
+        { label: 'Manage Members', key: 'members' },
+        { label: 'Manage Orders', key: 'orders' },
+        // You can add more items here later (e.g. Store Info)
     ];
 
     const handleListItemClick = (index) => {
@@ -30,7 +29,7 @@ export default function AdminLayout({ children }) {
             >
                 <Toolbar>
                     <Typography variant="h6" noWrap>
-                        Admin Panel
+                        Store Owner Panel
                     </Typography>
                 </Toolbar>
                 <List>

@@ -65,10 +65,11 @@ export class UserController {
 
     @Get()
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @RequireRoles(Roles.ADMIN)
+    @RequireRoles(Roles.ADMIN, Roles.STORE_OWNER)   // <-- add STORE_OWNER here
     async findAll() {
         return this.userService.findAll();
     }
+
 
     @Get(':id')
     @UseGuards(JwtAuthGuard, RolesGuard)

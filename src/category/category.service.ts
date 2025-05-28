@@ -16,16 +16,20 @@ export class CategoryService {
             name: createCategoryDto.name,
             description: createCategoryDto.description,
             image: createCategoryDto.image,
-            parent: createCategoryDto.parentId || null,  // Map parentId to parent
+            parent: createCategoryDto.parentId || null,
         };
-
         const created = new this.categoryModel(categoryData);
         return created.save();
     }
 
-    async findAll(): Promise<Category[]> {
-        // Return only root categories with children populated recursively
-        return this.categoryModel.find({ parent: null }).populate('children').exec();
+    async findAll(parentId?: string): Promise<Category[]> {
+        if (parentId) {
+            if (!Types.ObjectId.isValid(parentId)) {
+                throw new NotFoundException('Invalid parent category ID');
+            }
+            return this.categoryModel.find({ parent: parentId }).exec();
+        }
+        return this.categoryModel.find().exec();
     }
 
     async findChildren(parentId: string): Promise<Category[]> {
@@ -50,16 +54,13 @@ export class CategoryService {
         if (!Types.ObjectId.isValid(id)) {
             throw new NotFoundException('Invalid category ID');
         }
-
         const updateData: any = {
             ...updateCategoryDto,
         };
-
         if ('parentId' in updateCategoryDto) {
             updateData.parent = updateCategoryDto.parentId || null;
             delete updateData.parentId;
         }
-
         const updated = await this.categoryModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
         if (!updated) {
             throw new NotFoundException('Category not found');
