@@ -4,7 +4,7 @@ import {
     IsNumber,
     IsMongoId,
     Min,
-    IsBoolean
+    IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -44,4 +44,12 @@ export class UpdateProductDto {
     @IsOptional()
     @Type(() => Boolean)
     isActive?: boolean;
+
+    @IsString()
+    @IsOptional()
+    description?: string;
+
+    @IsString()
+    @IsOptional()
+    image?: string;
 }

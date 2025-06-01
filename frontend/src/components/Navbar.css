@@ -400,3 +400,20 @@ body.modal-open {
 .dashboard-button:hover {
     background-color: var(--accent-hover);
 }
+
+/* container for each store link in Boutique submenu */
+.submenu-item-container {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.submenu-item-container:hover {
+    background: var(--secondary);
+}
+
+.submenu-item-container a {
+    text-decoration: none;
+    color: var(--text-darker);
+    font-weight: 500;
+}

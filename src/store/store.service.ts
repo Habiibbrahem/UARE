@@ -91,6 +91,12 @@ export class StoreService {
             .populate('members', 'name email')   // <-- populate members now
             .exec();
     }
+    async findStoresByMember(userId: string): Promise<Store[]> {
+        return this.storeModel
+            .find({ members: new Types.ObjectId(userId) })
+            .populate('members', 'name email')
+            .exec();
+    }
 
     async findOneWithOwner(id: string): Promise<Store | null> {
         if (!Types.ObjectId.isValid(id)) {

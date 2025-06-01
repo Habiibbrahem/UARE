@@ -146,7 +146,10 @@ export class ProductService {
             throw new BadRequestException('Invalid store ID');
         }
 
-        return this.productModel.find({ storeId })
+        // Correction ici : conversion explicite en ObjectId
+        const storeObjectId = new Types.ObjectId(storeId);
+
+        return this.productModel.find({ storeId: storeObjectId })
             .populate('categoryId', 'name')
             .exec();
     }

@@ -10,7 +10,7 @@ import './Navbar.css';
 
 const API_BASE = 'http://localhost:3000';
 
-// Utility to build a tree from flat list (with parent references)
+// Utility to build a tree from a flat list
 const buildTree = (categories) => {
     const map = {};
     const roots = [];
@@ -24,7 +24,6 @@ const buildTree = (categories) => {
             if (map[cat.parent]) {
                 map[cat.parent].children.push(map[cat._id]);
             } else {
-                // parent not found? treat as root
                 roots.push(map[cat._id]);
             }
         } else {
@@ -35,10 +34,9 @@ const buildTree = (categories) => {
     return roots;
 };
 
-// Recursive component for multi-level dropdown
+// Recursive dropdown component
 const RecursiveDropdown = ({ categories }) => {
     const [activeIndex, setActiveIndex] = useState(null);
-
     if (!categories || categories.length === 0) return null;
 
     return (
@@ -52,14 +50,11 @@ const RecursiveDropdown = ({ categories }) => {
                 >
                     <button className="category-button">
                         {cat.name}
-                        {cat.children && cat.children.length > 0 && (
-                            <FaChevronRight style={{ marginLeft: 6 }} />
-                        )}
+                        {cat.children.length > 0 && <FaChevronRight style={{ marginLeft: 6 }} />}
                     </button>
 
-                    {activeIndex === idx && cat.children && cat.children.length > 0 && (
+                    {activeIndex === idx && cat.children.length > 0 && (
                         <div className="submenu">
-                            {/* Recursive call */}
                             <RecursiveDropdown categories={cat.children} />
                         </div>
                     )}
@@ -72,6 +67,8 @@ const RecursiveDropdown = ({ categories }) => {
 const Navbar = () => {
     const [categories, setCategories] = useState([]);
     const [categoryTree, setCategoryTree] = useState([]);
+    const [stores, setStores] = useState([]);
+    const [boutiqueOpen, setBoutiqueOpen] = useState(false);
     const [cartItems] = useState(3);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showSignupModal, setShowSignupModal] = useState(false);
@@ -91,33 +88,34 @@ const Navbar = () => {
         }
     };
 
+    // Fetch categories
     const fetchCategories = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const res = token
-                ? await axios.get(`${API_BASE}/categories`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                })
-                : await axios.get(`${API_BASE}/categories`);
+            const res = await axios.get(`${API_BASE}/categories`);
             setCategories(res.data);
         } catch (err) {
             console.error('Failed to fetch categories:', err);
-            setCategories([]);
+        }
+    };
+
+    // Fetch stores for Boutique
+    const fetchStores = async () => {
+        try {
+            const res = await axios.get(`${API_BASE}/stores`);
+            setStores(res.data);
+        } catch (err) {
+            console.error('Failed to fetch stores:', err);
         }
     };
 
     useEffect(() => {
         fetchCategories();
+        fetchStores();
     }, []);
 
-    // Build tree whenever categories change
     useEffect(() => {
         setCategoryTree(buildTree(categories));
     }, [categories]);
-
-    useEffect(() => {
-        fetchCategories();
-    }, [isLoggedIn]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -150,14 +148,34 @@ const Navbar = () => {
         <header className={`navbar-container ${isScrolled ? 'scrolled' : ''}`}>
             <nav className="navbar">
                 <div className="navbar-center">
-                    {location.pathname === '/' ? (
-                        categoryTree.length ? (
-                            <RecursiveDropdown categories={categoryTree} />
-                        ) : (
-                            <div>No Categories Available</div>
-                        )
-                    ) : null}
+                    {location.pathname === '/' && (
+                        <>
+                            {/* Boutique dropdown */}
+                            <div
+                                className="category"
+                                onMouseEnter={() => setBoutiqueOpen(true)}
+                                onMouseLeave={() => setBoutiqueOpen(false)}
+                            >
+                                <button className="category-button">
+                                    Boutique <FaChevronRight style={{ marginLeft: 6 }} />
+                                </button>
+                                {boutiqueOpen && (
+                                    <div className="submenu">
+                                        {stores.map(store => (
+                                            <div key={store._id} className="submenu-item-container">
+                                                <Link to={`/store/${store._id}`}>{store.name}</Link>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
+                            {/* Category dropdown */}
+                            {categoryTree.length
+                                ? <RecursiveDropdown categories={categoryTree} />
+                                : <div>No Categories Available</div>}
+                        </>
+                    )}
                     <div className="navbar-logo">
                         <Link to="/">UARE COLLECTION</Link>
                     </div>
@@ -165,21 +183,17 @@ const Navbar = () => {
 
                 <div className="navbar-right">
                     {userRole === 'admin' && (
-                        <button
-                            className="dashboard-button"
-                            onClick={() => navigate('/admin')}
-                            title="Admin Dashboard"
-                        >
+                        <button className="dashboard-button" onClick={() => navigate('/admin')}>
                             Dashboard
                         </button>
                     )}
-
                     {userRole === 'store_owner' && (
-                        <button
-                            className="dashboard-button"
-                            onClick={() => navigate('/store-owner')}
-                            title="Store Owner Dashboard"
-                        >
+                        <button className="dashboard-button" onClick={() => navigate('/store-owner')}>
+                            Dashboard
+                        </button>
+                    )}
+                    {userRole === 'store_member' && (
+                        <button className="dashboard-button" onClick={() => navigate('/store-member')}>
                             Dashboard
                         </button>
                     )}
@@ -223,7 +237,7 @@ const Navbar = () => {
 
             {showLoginModal && (
                 <div className="modal-overlay" onClick={() => setShowLoginModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <LoginModal
                             onClose={() => setShowLoginModal(false)}
                             showSignup={() => {
@@ -234,10 +248,9 @@ const Navbar = () => {
                     </div>
                 </div>
             )}
-
             {showSignupModal && (
                 <div className="modal-overlay" onClick={() => setShowSignupModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <SignupModal
                             onClose={() => setShowSignupModal(false)}
                             showLogin={() => {

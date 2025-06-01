@@ -26,6 +26,12 @@ export class Product extends Document {
 
     @Prop({ default: true })
     isActive: boolean;
+
+    @Prop()
+    description?: string;
+
+    @Prop()
+    image?: string;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

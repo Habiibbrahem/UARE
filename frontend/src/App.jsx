@@ -1,14 +1,16 @@
+// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
+import StorePage from './pages/StorePage';
 
 import AdminDashboard from './components/dashboards/AdminDashboard';
+import AssignStoreOwner from './components/dashboards/AssignStoreOwner';
 import StoreOwnerDashboard from './components/dashboards/StoreOwnerDashboard';
 import StoreMemberDashboard from './components/dashboards/StoreMemberDashboard';
 import Unauthorized from './components/dashboards/Unauthorized';
-
-import AssignStoreOwner from './components/dashboards/AssignStoreOwner'; // import new page component
 
 function RequireAuth({ children, allowedRoles }) {
   const token = localStorage.getItem('token');
@@ -33,8 +35,15 @@ function App() {
   return (
     <Router>
       <Navbar />
+
       <Routes>
+        {/* Public Home */}
         <Route path="/" element={<HomePage />} />
+
+        {/* Store front */}
+        <Route path="/store/:storeId" element={<StorePage />} />
+
+        {/* Admin */}
         <Route
           path="/admin"
           element={
@@ -43,7 +52,7 @@ function App() {
             </RequireAuth>
           }
         />
-        {/* NEW ROUTE FOR ASSIGN STORE OWNER */}
+        {/* Admin → Assign owner */}
         <Route
           path="/admin/assign-store-owner"
           element={
@@ -52,6 +61,8 @@ function App() {
             </RequireAuth>
           }
         />
+
+        {/* Store owner */}
         <Route
           path="/store-owner"
           element={
@@ -60,6 +71,8 @@ function App() {
             </RequireAuth>
           }
         />
+
+        {/* Store member */}
         <Route
           path="/store-member"
           element={
@@ -68,6 +81,8 @@ function App() {
             </RequireAuth>
           }
         />
+
+        {/* Unauthorized fallback */}
         <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
     </Router>
