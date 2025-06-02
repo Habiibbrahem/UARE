@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { FaSearch, FaUser, FaShoppingBag, FaChevronRight } from 'react-icons/fa';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
-import LoginModal from './LoginModal';
-import SignupModal from './SignupModal';
 import axios from 'axios';
 import './Navbar.css';
+
+import LoginModal from './LoginModal';
+import SignupModal from './SignupModal';
+import CartIcon from './CartIcon';                // ← NEW: import CartIcon
 
 const API_BASE = 'http://localhost:3000';
 
@@ -15,11 +17,11 @@ const buildTree = (categories) => {
     const map = {};
     const roots = [];
 
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
         map[cat._id] = { ...cat, children: [] };
     });
 
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
         if (cat.parent) {
             if (map[cat.parent]) {
                 map[cat.parent].children.push(map[cat._id]);
@@ -52,7 +54,6 @@ const RecursiveDropdown = ({ categories }) => {
                         {cat.name}
                         {cat.children.length > 0 && <FaChevronRight style={{ marginLeft: 6 }} />}
                     </button>
-
                     {activeIndex === idx && cat.children.length > 0 && (
                         <div className="submenu">
                             <RecursiveDropdown categories={cat.children} />
@@ -69,7 +70,6 @@ const Navbar = () => {
     const [categoryTree, setCategoryTree] = useState([]);
     const [stores, setStores] = useState([]);
     const [boutiqueOpen, setBoutiqueOpen] = useState(false);
-    const [cartItems] = useState(3);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showSignupModal, setShowSignupModal] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -161,7 +161,7 @@ const Navbar = () => {
                                 </button>
                                 {boutiqueOpen && (
                                     <div className="submenu">
-                                        {stores.map(store => (
+                                        {stores.map((store) => (
                                             <div key={store._id} className="submenu-item-container">
                                                 <Link to={`/store/${store._id}`}>{store.name}</Link>
                                             </div>
@@ -171,11 +171,14 @@ const Navbar = () => {
                             </div>
 
                             {/* Category dropdown */}
-                            {categoryTree.length
-                                ? <RecursiveDropdown categories={categoryTree} />
-                                : <div>No Categories Available</div>}
+                            {categoryTree.length ? (
+                                <RecursiveDropdown categories={categoryTree} />
+                            ) : (
+                                <div>No Categories Available</div>
+                            )}
                         </>
                     )}
+
                     <div className="navbar-logo">
                         <Link to="/">UARE COLLECTION</Link>
                     </div>
@@ -183,17 +186,26 @@ const Navbar = () => {
 
                 <div className="navbar-right">
                     {userRole === 'admin' && (
-                        <button className="dashboard-button" onClick={() => navigate('/admin')}>
+                        <button
+                            className="dashboard-button"
+                            onClick={() => navigate('/admin')}
+                        >
                             Dashboard
                         </button>
                     )}
                     {userRole === 'store_owner' && (
-                        <button className="dashboard-button" onClick={() => navigate('/store-owner')}>
+                        <button
+                            className="dashboard-button"
+                            onClick={() => navigate('/store-owner')}
+                        >
                             Dashboard
                         </button>
                     )}
                     {userRole === 'store_member' && (
-                        <button className="dashboard-button" onClick={() => navigate('/store-member')}>
+                        <button
+                            className="dashboard-button"
+                            onClick={() => navigate('/store-member')}
+                        >
                             Dashboard
                         </button>
                     )}
@@ -227,17 +239,15 @@ const Navbar = () => {
                         </div>
                     )}
 
-                    <div className="icon-container">
-                        <FaShoppingBag className="icon" />
-                        {cartItems > 0 && <span className="cart-count">{cartItems}</span>}
-                        <span className="icon-name">Mon Panier</span>
-                    </div>
+                    {/* CartIcon shows live cart count and navigates to /cart */}
+                    <CartIcon />
+
                 </div>
             </nav>
 
             {showLoginModal && (
                 <div className="modal-overlay" onClick={() => setShowLoginModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <LoginModal
                             onClose={() => setShowLoginModal(false)}
                             showSignup={() => {
@@ -248,9 +258,10 @@ const Navbar = () => {
                     </div>
                 </div>
             )}
+
             {showSignupModal && (
                 <div className="modal-overlay" onClick={() => setShowSignupModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <SignupModal
                             onClose={() => setShowSignupModal(false)}
                             showLogin={() => {

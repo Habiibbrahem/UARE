@@ -5,6 +5,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import StorePage from './pages/StorePage';
+import ProductPage from './pages/ProductPage';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 
 import AdminDashboard from './components/dashboards/AdminDashboard';
 import AssignStoreOwner from './components/dashboards/AssignStoreOwner';
@@ -20,10 +23,7 @@ function RequireAuth({ children, allowedRoles }) {
     const base64Payload = token.split('.')[1];
     const payload = JSON.parse(atob(base64Payload));
     const role = payload.role.toLowerCase();
-
-    if (allowedRoles.includes(role)) {
-      return children;
-    }
+    if (allowedRoles.includes(role)) return children;
     return <Navigate to="/unauthorized" />;
   } catch (e) {
     console.error('RequireAuth error:', e);
@@ -31,7 +31,7 @@ function RequireAuth({ children, allowedRoles }) {
   }
 }
 
-function App() {
+export default function App() {
   return (
     <Router>
       <Navbar />
@@ -40,8 +40,17 @@ function App() {
         {/* Public Home */}
         <Route path="/" element={<HomePage />} />
 
-        {/* Store front */}
+        {/* Store front (listing) */}
         <Route path="/store/:storeId" element={<StorePage />} />
+
+        {/* Individual product detail */}
+        <Route path="/product/:productId" element={<ProductPage />} />
+
+        {/* Cart page */}
+        <Route path="/cart" element={<CartPage />} />
+
+        {/* Checkout page */}
+        <Route path="/checkout" element={<CheckoutPage />} />
 
         {/* Admin */}
         <Route
@@ -88,5 +97,3 @@ function App() {
     </Router>
   );
 }
-
-export default App;

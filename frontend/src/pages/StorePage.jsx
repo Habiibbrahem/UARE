@@ -1,7 +1,7 @@
 // src/pages/StorePage.jsx
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import axiosInstance from '../services/axiosInstance';    // ← add this
+import { useParams, Link } from 'react-router-dom';         // ← import Link
+import axiosInstance from '../services/axiosInstance';
 import {
     Box,
     CircularProgress,
@@ -23,19 +23,21 @@ export default function StorePage() {
     useEffect(() => {
         setLoading(true);
         getStoreById(storeId)
-            .then(res => setStore(res.data))
+            .then((res) => setStore(res.data))
             .finally(() => setLoading(false));
     }, [storeId]);
 
-    if (loading)
+    if (loading) {
         return (
             <Box display="flex" justifyContent="center" mt={4}>
                 <CircularProgress />
             </Box>
         );
+    }
 
-    if (!store)
+    if (!store) {
         return <Typography color="error">Store not found.</Typography>;
+    }
 
     return (
         <Box p={3}>
@@ -48,28 +50,20 @@ export default function StorePage() {
                         <Typography>No products in this store.</Typography>
                     </Grid>
                 ) : (
-                    store.products.map(prod => (
+                    store.products.map((prod) => (
                         <Grid item key={prod._id} xs={12} sm={6} md={4} lg={3}>
-                            <Card
-                                sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-                            >
+                            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 {prod.image && (
                                     <CardMedia
                                         component="img"
                                         height="160"
-                                        // ← prefix with baseURL
-                                        image={`${axiosInstance.defaults.baseURL}${prod.image}`}
+                                        image={`${axiosInstance.defaults.baseURL}${prod.image}`}  // prefix with baseURL
                                         alt={prod.name}
                                     />
                                 )}
                                 <CardContent sx={{ flexGrow: 1 }}>
                                     <Typography variant="h6">{prod.name}</Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="textSecondary"
-                                        paragraph
-                                        noWrap
-                                    >
+                                    <Typography variant="body2" color="textSecondary" paragraph noWrap>
                                         {prod.description}
                                     </Typography>
                                     <Typography variant="subtitle1" color="primary">
@@ -77,7 +71,12 @@ export default function StorePage() {
                                     </Typography>
                                 </CardContent>
                                 <CardActions>
-                                    <Button size="small" href={`/product/${prod._id}`}>
+                                    {/* Link to Product Detail page instead of plain href */}
+                                    <Button
+                                        size="small"
+                                        component={Link}
+                                        to={`/product/${prod._id}`}
+                                    >
                                         View
                                     </Button>
                                 </CardActions>
