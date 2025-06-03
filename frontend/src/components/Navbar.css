@@ -57,7 +57,7 @@
 }
 
 /* ===================================== */
-/* NAVBAR LAYOUT - UPDATED FOR NEW STRUCTURE */
+/* NAVBAR LAYOUT */
 /* ===================================== */
 .navbar {
     display: flex;
@@ -70,7 +70,6 @@
     position: relative;
 }
 
-/* Left side - categories */
 .navbar-left {
     display: flex;
     align-items: center;
@@ -84,7 +83,6 @@
     flex-wrap: wrap;
 }
 
-/* Center - logo */
 .navbar-center {
     display: flex;
     justify-content: center;
@@ -112,7 +110,6 @@
     color: var(--accent-color);
 }
 
-/* Right side - icons */
 .navbar-right {
     display: flex;
     align-items: center;
@@ -120,6 +117,39 @@
     flex: 1;
     justify-content: flex-end;
     min-width: 0;
+}
+
+/* ===================================== */
+/* USER INDICATOR STYLES */
+/* ===================================== */
+.user-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-role-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all var(--transition);
+}
+
+.icon-button:hover .user-role-badge {
+    color: var(--accent-color);
+}
+
+@media (max-width: 768px) {
+    .user-role-badge {
+        display: none;
+    }
 }
 
 /* ===================================== */
