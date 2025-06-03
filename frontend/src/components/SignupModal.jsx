@@ -1,3 +1,5 @@
+// src/components/SignupModal.jsx
+
 import React, { useState } from 'react';
 import { FaTimes, FaUser, FaLock, FaEnvelope, FaGoogle } from 'react-icons/fa';
 import './LoginModal.css'; // Reusing the same CSS
@@ -14,6 +16,7 @@ const SignupModal = ({ onClose, showLogin }) => {
         e.preventDefault();
         setError('');
         setSuccessMsg('');
+
         if (password !== confirmPassword) {
             setError("Passwords don't match!");
             return;
@@ -27,7 +30,7 @@ const SignupModal = ({ onClose, showLogin }) => {
                     name,
                     email,
                     password,
-                    role: 'STORE_MEMBER', // or omit to default to CUSTOMER, adjust as needed
+                    role: 'customer', // ← send lowercase here
                 }),
             });
 
@@ -37,13 +40,13 @@ const SignupModal = ({ onClose, showLogin }) => {
                 return;
             }
 
-            setSuccessMsg('Registration successful! Please login.');
+            setSuccessMsg('Registration successful! Please log in.');
             setName('');
             setEmail('');
             setPassword('');
             setConfirmPassword('');
 
-            // Optionally auto-switch to login after success
+            // After a brief delay, close this modal and show the login modal:
             setTimeout(() => {
                 onClose();
                 showLogin();

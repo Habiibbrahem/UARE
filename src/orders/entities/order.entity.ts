@@ -1,7 +1,9 @@
+// src/orders/entities/order.entity.ts
+
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { PaymentMethod } from '../constants/order.constants';
-import { OrderItem } from 'src/orders/entities/order-item.entity';
+import { OrderItem } from './order-item.entity';
 
 export type OrderDocument = Order & Document;
 
@@ -51,6 +53,10 @@ export class Order {
 
     @Prop()
     deliveredAt?: Date;
+
+    // ← NEW: store customer’s phone number
+    @Prop({ required: true })
+    phoneNumber: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

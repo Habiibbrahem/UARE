@@ -1,6 +1,15 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, IsArray } from 'class-validator';
+// src/orders/dto/create-order.dto.ts
+
+import {
+    IsString,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsEnum,
+    IsArray,
+} from 'class-validator';
 import { PaymentMethod } from '../constants/order.constants';
-import { OrderItem } from 'src/orders/entities/order-item.entity';
+import { OrderItem } from '../entities/order-item.entity';
 
 export class CreateOrderDto {
     @IsNotEmpty()
@@ -22,6 +31,11 @@ export class CreateOrderDto {
     @IsNotEmpty()
     @IsString()
     shippingAddress: string;
+
+    // ← NEW: validate phoneNumber
+    @IsNotEmpty()
+    @IsString()
+    phoneNumber: string;
 
     @IsNotEmpty()
     @IsNumber()

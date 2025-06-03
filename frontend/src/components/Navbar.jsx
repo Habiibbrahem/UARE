@@ -8,7 +8,7 @@ import './Navbar.css';
 
 import LoginModal from './LoginModal';
 import SignupModal from './SignupModal';
-import CartIcon from './CartIcon';                // ← NEW: import CartIcon
+import CartIcon from './CartIcon';
 
 const API_BASE = 'http://localhost:3000';
 
@@ -73,20 +73,22 @@ const Navbar = () => {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showSignupModal, setShowSignupModal] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [userRole, setUserRole] = useState(null);
 
     const navigate = useNavigate();
     const location = useLocation();
 
-    const getUserRoleFromToken = (token) => {
+    // Compute login status and role directly from localStorage on every render
+    const token = localStorage.getItem('token');
+    let userRole = null;
+    if (token) {
         try {
             const decoded = jwt_decode(token);
-            return decoded.role || null;
+            userRole = decoded.role;
         } catch {
-            return null;
+            userRole = null;
         }
-    };
+    }
+    const isLoggedIn = !!token;
 
     // Fetch categories
     const fetchCategories = async () => {
@@ -118,20 +120,6 @@ const Navbar = () => {
     }, [categories]);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        setIsLoggedIn(!!token);
-        setUserRole(token ? getUserRoleFromToken(token) : null);
-
-        const onStorage = () => {
-            const t = localStorage.getItem('token');
-            setIsLoggedIn(!!t);
-            setUserRole(t ? getUserRoleFromToken(t) : null);
-        };
-        window.addEventListener('storage', onStorage);
-        return () => window.removeEventListener('storage', onStorage);
-    }, []);
-
-    useEffect(() => {
         const onScroll = () => setIsScrolled(window.scrollY > 10);
         window.addEventListener('scroll', onScroll);
         return () => window.removeEventListener('scroll', onScroll);
@@ -139,8 +127,6 @@ const Navbar = () => {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
-        setIsLoggedIn(false);
-        setUserRole(null);
         navigate('/');
     };
 
@@ -186,26 +172,17 @@ const Navbar = () => {
 
                 <div className="navbar-right">
                     {userRole === 'admin' && (
-                        <button
-                            className="dashboard-button"
-                            onClick={() => navigate('/admin')}
-                        >
+                        <button className="dashboard-button" onClick={() => navigate('/admin')}>
                             Dashboard
                         </button>
                     )}
                     {userRole === 'store_owner' && (
-                        <button
-                            className="dashboard-button"
-                            onClick={() => navigate('/store-owner')}
-                        >
+                        <button className="dashboard-button" onClick={() => navigate('/store-owner')}>
                             Dashboard
                         </button>
                     )}
                     {userRole === 'store_member' && (
-                        <button
-                            className="dashboard-button"
-                            onClick={() => navigate('/store-member')}
-                        >
+                        <button className="dashboard-button" onClick={() => navigate('/store-member')}>
                             Dashboard
                         </button>
                     )}
@@ -241,7 +218,6 @@ const Navbar = () => {
 
                     {/* CartIcon shows live cart count and navigates to /cart */}
                     <CartIcon />
-
                 </div>
             </nav>
 

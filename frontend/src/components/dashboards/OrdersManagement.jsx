@@ -1,4 +1,5 @@
 // src/components/dashboards/OrdersManagement.jsx
+
 import React, { useEffect, useState } from 'react';
 import {
     Box,
@@ -29,6 +30,7 @@ import {
     cancelOrder,
 } from '../../services/storeOwnerService';
 
+// Order statuses
 const ORDER_STATUS_OPTIONS = [
     'pending',
     'processing',
@@ -37,12 +39,11 @@ const ORDER_STATUS_OPTIONS = [
     'cancelled',
 ];
 
-// Helper to decode JWT token payload
+// Helper to decode JWT payload
 function decodeToken(token) {
     try {
         const base64Payload = token.split('.')[1];
-        const payload = JSON.parse(atob(base64Payload));
-        return payload;
+        return JSON.parse(atob(base64Payload));
     } catch {
         return null;
     }
@@ -65,24 +66,29 @@ export default function OrdersManagement() {
         severity: 'success',
     });
 
+    // ──────── fetch the owner’s store ID once on mount ────────
     useEffect(() => {
         const token = localStorage.getItem('token');
         const user = decodeToken(token);
-        if (user && user.sub) {
-            getStoreByOwner(user.sub)
-                .then((res) => {
-                    if (res.data.length > 0) {
-                        setStoreId(res.data[0]._id);
-                    } else {
-                        setError('No store found for the current user.');
-                    }
-                })
-                .catch(() => setError('Failed to load store'));
-        } else {
+        if (!user || !user.sub) {
             setError('User not authenticated');
+            return;
         }
+
+        getStoreByOwner()
+            .then((res) => {
+                if (Array.isArray(res.data) && res.data.length > 0) {
+                    setStoreId(res.data[0]._id);
+                } else {
+                    setError('No store found for the current user.');
+                }
+            })
+            .catch(() => {
+                setError('Failed to load store');
+            });
     }, []);
 
+    // ──────── once storeId is known, fetch orders ────────
     useEffect(() => {
         if (storeId) {
             fetchOrders();
@@ -106,7 +112,7 @@ export default function OrdersManagement() {
         try {
             await updateOrderStatus(orderId, newStatus);
             setSnackbar({ open: true, message: 'Order status updated', severity: 'success' });
-            fetchOrders();
+            await fetchOrders();
         } catch {
             setSnackbar({ open: true, message: 'Failed to update status', severity: 'error' });
         }
@@ -135,7 +141,7 @@ export default function OrdersManagement() {
                 await cancelOrder(confirmDialog.orderId);
                 setSnackbar({ open: true, message: 'Order cancelled', severity: 'success' });
             }
-            fetchOrders();
+            await fetchOrders();
         } catch {
             setSnackbar({ open: true, message: 'Failed to perform action', severity: 'error' });
         }
@@ -160,6 +166,8 @@ export default function OrdersManagement() {
                             <TableRow>
                                 <TableCell>Order Number</TableCell>
                                 <TableCell>Customer ID</TableCell>
+                                <TableCell>Address</TableCell>          {/* ← NEW */}
+                                <TableCell>Phone</TableCell>            {/* ← NEW */}
                                 <TableCell>Status</TableCell>
                                 <TableCell>Payment Method</TableCell>
                                 <TableCell>Total</TableCell>
@@ -169,7 +177,7 @@ export default function OrdersManagement() {
                         <TableBody>
                             {orders.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} align="center">
+                                    <TableCell colSpan={8} align="center">
                                         No orders found.
                                     </TableCell>
                                 </TableRow>
@@ -178,6 +186,8 @@ export default function OrdersManagement() {
                                     <TableRow key={order._id}>
                                         <TableCell>{order.orderNumber}</TableCell>
                                         <TableCell>{order.customerId}</TableCell>
+                                        <TableCell>{order.shippingAddress}</TableCell>   {/* ← show address */}
+                                        <TableCell>{order.phoneNumber}</TableCell>       {/* ← show phone */}
                                         <TableCell>
                                             <Select
                                                 value={order.status}

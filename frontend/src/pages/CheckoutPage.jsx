@@ -1,4 +1,5 @@
 // src/pages/CheckoutPage.jsx
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import {
@@ -20,7 +21,7 @@ export default function CheckoutPage() {
     // Grab the cart items array from Zustand
     const cartItems = useCartStore((s) => s.cartItems);
 
-    // Immediately invoke getTotalPrice() inside the selector so 'subtotal' is a number, not a function
+    // Immediately invoke getTotalPrice() inside the selector so 'subtotal' is a number
     const subtotal = useCartStore((s) => s.getTotalPrice());
 
     const clearCart = useCartStore((s) => s.clearCart);
@@ -140,6 +141,7 @@ export default function CheckoutPage() {
             paymentMethod: 'cash_on_delivery',
             items,
             shippingAddress,
+            phoneNumber,       // ← NEW
             shippingCost,
             subtotal,
             taxAmount,

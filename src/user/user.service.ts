@@ -1,3 +1,4 @@
+// src/user/user.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -14,7 +15,10 @@ export class UserService {
         return this.userModel.findOne({ email }).exec();
     }
 
-    async create(user: Partial<User>): Promise<User> {
+    /**
+     * Create a new user.  If user.password exists, hash it exactly once here.
+     */
+    async create(user: Partial<CreateUserDto & { role?: Roles }>): Promise<User> {
         if (user.password) {
             user.password = await bcrypt.hash(user.password, 10);
         }
@@ -30,11 +34,16 @@ export class UserService {
         return this.userModel.findById(id).exec();
     }
 
-    async update(id: string, updateUserDto: Partial<CreateUserDto>): Promise<User | null> {
+    async update(
+        id: string,
+        updateUserDto: Partial<CreateUserDto>,
+    ): Promise<User | null> {
         if (updateUserDto.password) {
             updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
         }
-        return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true }).exec();
+        return this.userModel
+            .findByIdAndUpdate(id, updateUserDto, { new: true })
+            .exec();
     }
 
     async remove(id: string): Promise<boolean> {
@@ -49,7 +58,7 @@ export class UserService {
     async findStoreOwnersWithStores() {
         return this.userModel
             .find({ role: Roles.STORE_OWNER })
-            .populate('stores', 'name address')  // Populate stores with name and address
+            .populate('stores', 'name address')
             .exec();
     }
 }

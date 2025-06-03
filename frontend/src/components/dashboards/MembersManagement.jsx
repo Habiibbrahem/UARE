@@ -25,18 +25,17 @@ export default function MembersManagement() {
                 const token = localStorage.getItem('token');
                 if (!token) throw new Error('You must be logged in');
 
-                const { sub: ownerId } = JSON.parse(atob(token.split('.')[1]));
+                // Backend route is GET /stores/owner (no ownerId in URL)
+                const res = await axios.get(`${API_BASE}/stores/owner`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
 
-                const { data: stores } = await axios.get(
-                    `${API_BASE}/stores/owner/${ownerId}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-
-                if (!stores.length) {
+                // res.data should be an array; pick the first store
+                if (!Array.isArray(res.data) || res.data.length === 0) {
                     throw new Error('No store assigned to this owner');
                 }
 
-                const ownerStore = stores[0];
+                const ownerStore = res.data[0];
                 setStore(ownerStore);
                 setMembers(ownerStore.members || []);
                 setError(null);

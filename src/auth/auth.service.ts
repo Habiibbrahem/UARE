@@ -1,11 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+// src/auth/auth.service.ts
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcryptjs';
-import { Roles } from '../auth/constants/roles.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from '../user/user.entity';
-import { Types } from 'mongoose'; // Changed from mongodb to mongoose 
+import { Types } from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -14,14 +14,11 @@ export class AuthService {
         private jwtService: JwtService,
     ) { }
 
-    async register(createUserDto: CreateUserDto) {
-        // Hash the password before saving
-        const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-        console.log('Hashed Password:', hashedPassword); // Debugging line
-        return this.userService.create({
-            ...createUserDto,
-            password: hashedPassword,
-        });
+    /**
+     * Register a new user.  We do NOT hash here, because UserService.create will hash once.
+     */
+    async register(createUserDto: CreateUserDto): Promise<User> {
+        return this.userService.create(createUserDto);
     }
 
     async validateUser(email: string, password: string): Promise<User | null> {
@@ -34,15 +31,17 @@ export class AuthService {
         console.log('Found user:', {
             email: user.email,
             role: user.role,
-            hashedPassword: user.password.substring(0, 15) + '...'
+            hashedPassword: user.password.substring(0, 15) + '...',
         });
 
         const match = await bcrypt.compare(password.trim(), user.password);
         console.log(`Password match: ${match}`);
 
         if (!match) {
-            console.log('Debug: Generated hash for comparison:',
-                await bcrypt.hash(password.trim(), 10));
+            console.log(
+                'Debug: Generated hash for comparison:',
+                await bcrypt.hash(password.trim(), 10),
+            );
         }
 
         return match ? user : null;
@@ -51,7 +50,7 @@ export class AuthService {
     async login(user: User) {
         const payload = {
             email: user.email,
-            sub: (user._id as Types.ObjectId).toString(), // Added type assertion
+            sub: (user._id as Types.ObjectId).toString(),
             role: user.role,
         };
         return {
@@ -62,11 +61,11 @@ export class AuthService {
     async refreshToken(user: any) {
         const payload = {
             email: user.email,
-            sub: (user._id as Types.ObjectId).toString(), // Added type assertion 
-            role: user.role
+            sub: (user._id as Types.ObjectId).toString(),
+            role: user.role,
         };
         return {
             access_token: this.jwtService.sign(payload),
         };
     }
-};
+}
