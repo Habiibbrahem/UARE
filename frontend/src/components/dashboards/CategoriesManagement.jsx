@@ -1,3 +1,4 @@
+// src/components/dashboards/CategoriesManagement.jsx
 import React, { useEffect, useState } from 'react';
 import {
     Box,
@@ -29,8 +30,9 @@ import axios from 'axios';
 const API_BASE = 'http://localhost:3000';
 
 export default function CategoriesManagement() {
-    const [categories, setCategories] = useState([]);
-    const [tree, setTree] = useState([]);
+    const [categories, setCategories] = useState([]);          // flat list
+    const [tree, setTree] = useState([]);                      // nested tree for table
+    const [breadcrumbs, setBreadcrumbs] = useState({});        // map of id → full “path” string
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ export default function CategoriesManagement() {
     const [error, setError] = useState(null);
     const [expandedIds, setExpandedIds] = useState(new Set());
 
-    // Fetch categories
+    // 1) Fetch all categories (flat)
     const fetchCategories = async () => {
         setFetching(true);
         setError(null);
@@ -53,33 +55,68 @@ export default function CategoriesManagement() {
             const res = await axios.get(`${API_BASE}/categories`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            // Map backend 'parent' field to 'parentId' for frontend
-            const categoriesWithParentId = res.data.map(cat => ({
+            // Convert backend 'parent' → 'parentId'
+            const catsWithParent = res.data.map((cat) => ({
                 ...cat,
                 parentId: cat.parent || null,
             }));
-            setCategories(categoriesWithParentId);
-        } catch (error) {
+            setCategories(catsWithParent);
+        } catch (err) {
             setError('Failed to fetch categories');
             setCategories([]);
         }
         setFetching(false);
     };
 
-    // Build tree from flat list
+    // 2) Build a lookup map id→category for breadcrumb generation
+    const buildLookup = (list) => {
+        const lookup = {};
+        list.forEach((cat) => {
+            lookup[cat._id] = cat;
+        });
+        return lookup;
+    };
+
+    // 3) Given the flat list, compute a “breadcrumb” string for each category
+    const computeBreadcrumbs = (list) => {
+        const lookup = buildLookup(list);
+        const memo = {}; // memo[id] = "Ancestor › ... › Name"
+
+        const buildForId = (id) => {
+            if (!id) return '';
+            if (memo[id]) return memo[id];
+            const node = lookup[id];
+            if (!node) return '';
+            if (!node.parentId) {
+                memo[id] = node.name;
+                return memo[id];
+            }
+            const parentPath = buildForId(node.parentId);
+            memo[id] = parentPath ? `${parentPath} › ${node.name}` : node.name;
+            return memo[id];
+        };
+
+        list.forEach((cat) => {
+            buildForId(cat._id);
+        });
+        return memo;
+    };
+
+    // 4) Build a nested tree for table display
     const buildTree = (list) => {
         const map = {};
         const roots = [];
 
-        list.forEach(cat => {
+        list.forEach((cat) => {
             map[cat._id] = { ...cat, children: [] };
         });
 
-        list.forEach(cat => {
+        list.forEach((cat) => {
             if (cat.parentId) {
                 if (map[cat.parentId]) {
                     map[cat.parentId].children.push(map[cat._id]);
                 } else {
+                    // orphan → treat as root
                     roots.push(map[cat._id]);
                 }
             } else {
@@ -90,12 +127,15 @@ export default function CategoriesManagement() {
         return roots;
     };
 
+    // Fetch categories on mount
     useEffect(() => {
         fetchCategories();
     }, []);
 
+    // Recompute tree and breadcrumbs whenever the flat list changes
     useEffect(() => {
         setTree(buildTree(categories));
+        setBreadcrumbs(computeBreadcrumbs(categories));
     }, [categories]);
 
     const toggleExpand = (id) => {
@@ -108,8 +148,9 @@ export default function CategoriesManagement() {
         setExpandedIds(newExpanded);
     };
 
+    // Render table rows as nested, indenting by level
     const renderRows = (nodes, level = 0) =>
-        nodes.map(cat => (
+        nodes.map((cat) => (
             <React.Fragment key={cat._id}>
                 <TableRow>
                     <TableCell style={{ paddingLeft: 20 * level }}>
@@ -118,11 +159,16 @@ export default function CategoriesManagement() {
                                 {expandedIds.has(cat._id) ? <ExpandLess /> : <ExpandMore />}
                             </IconButton>
                         )}
-                        {!cat.children.length && <span style={{ width: 40, display: 'inline-block' }}></span>}
+                        {!cat.children.length && <span style={{ width: 40, display: 'inline-block' }} />}
                         {cat.name}
                     </TableCell>
                     <TableCell>{cat.description || '-'}</TableCell>
-                    <TableCell>{cat.parentId ? categories.find(c => c._id === cat.parentId)?.name || '-' : 'Root'}</TableCell>
+                    <TableCell>
+                        {cat.parentId
+                            ? // show just the immediate parent’s name
+                            categories.find((c) => c._id === cat.parentId)?.name || '-'
+                            : 'Root'}
+                    </TableCell>
                     <TableCell align="right">
                         <Tooltip title="Edit">
                             <IconButton onClick={() => handleOpenDialog(cat)}>
@@ -177,7 +223,7 @@ export default function CategoriesManagement() {
                 return;
             }
             const payload = {
-                name: selectedCategory.name,
+                name: selectedCategory.name.trim(),
                 description: selectedCategory.description,
                 parentId: selectedCategory.parentId || null,
             };
@@ -192,7 +238,7 @@ export default function CategoriesManagement() {
             }
             await fetchCategories();
             handleCloseDialog();
-        } catch (error) {
+        } catch (err) {
             alert('Failed to save category');
         }
         setLoading(false);
@@ -210,7 +256,7 @@ export default function CategoriesManagement() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             await fetchCategories();
-        } catch (error) {
+        } catch (err) {
             alert('Failed to delete category');
         }
     };
@@ -283,10 +329,11 @@ export default function CategoriesManagement() {
                         >
                             <MenuItem value="">None (Root category)</MenuItem>
                             {categories
-                                .filter(cat => cat._id !== selectedCategory?._id) // exclude self
-                                .map(cat => (
+                                .filter((cat) => cat._id !== selectedCategory?._id) // exclude self
+                                .map((cat) => (
                                     <MenuItem key={cat._id} value={cat._id}>
-                                        {cat.name}
+                                        {/* display full breadcrumb path rather than raw name */}
+                                        {breadcrumbs[cat._id] || cat.name}
                                     </MenuItem>
                                 ))}
                         </Select>
