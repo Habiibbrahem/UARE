@@ -5,9 +5,6 @@ import jwt_decode from 'jwt-decode';
 import axios from 'axios';
 import debounce from 'lodash.debounce';
 import './Navbar.css';
-
-import LoginModal from './LoginModal';
-import SignupModal from './SignupModal';
 import CartIcon from './CartIcon';
 
 const API_BASE = 'http://localhost:3000';
@@ -18,8 +15,6 @@ const Navbar = () => {
     const [stores, setStores] = useState([]);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeMegaMenu, setActiveMegaMenu] = useState(null);
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [showSignupModal, setShowSignupModal] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -150,7 +145,6 @@ const Navbar = () => {
         let indicatorText = '';
         let displayName = '';
 
-        // Get first name or username for display
         if (userData) {
             displayName = userData.firstName ||
                 userData.username ||
@@ -168,7 +162,7 @@ const Navbar = () => {
             case 'store_member':
                 indicatorText = `${storeData?.name || 'Store'} - ${displayName || 'Member'}`;
                 break;
-            default: // customer
+            default:
                 indicatorText = displayName || 'My Account';
         }
 
@@ -342,13 +336,13 @@ const Navbar = () => {
                             ) : (
                                 <>
                                     <button
-                                        onClick={() => setShowLoginModal(true)}
+                                        onClick={() => navigate('/login')}
                                         className="dropdown-link"
                                     >
                                         Login
                                     </button>
                                     <button
-                                        onClick={() => setShowSignupModal(true)}
+                                        onClick={() => navigate('/signup')}
                                         className="dropdown-link"
                                     >
                                         Sign Up
@@ -389,26 +383,6 @@ const Navbar = () => {
                         </button>
                     </form>
                 </div>
-            )}
-
-            {showLoginModal && (
-                <LoginModal
-                    onClose={() => setShowLoginModal(false)}
-                    showSignup={() => {
-                        setShowLoginModal(false);
-                        setShowSignupModal(true);
-                    }}
-                />
-            )}
-
-            {showSignupModal && (
-                <SignupModal
-                    onClose={() => setShowSignupModal(false)}
-                    showLogin={() => {
-                        setShowSignupModal(false);
-                        setShowLoginModal(true);
-                    }}
-                />
             )}
         </header>
     );

@@ -8,6 +8,9 @@ import StorePage from './pages/StorePage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import OrderConfirmationPage from './pages/OrderConfirmationPage';
 
 import AdminDashboard from './components/dashboards/AdminDashboard';
 import AssignStoreOwner from './components/dashboards/AssignStoreOwner';
@@ -17,7 +20,7 @@ import Unauthorized from './components/dashboards/Unauthorized';
 
 function RequireAuth({ children, allowedRoles }) {
   const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/" />;
+  if (!token) return <Navigate to="/login" />;
 
   try {
     const base64Payload = token.split('.')[1];
@@ -27,7 +30,7 @@ function RequireAuth({ children, allowedRoles }) {
     return <Navigate to="/unauthorized" />;
   } catch (e) {
     console.error('RequireAuth error:', e);
-    return <Navigate to="/" />;
+    return <Navigate to="/login" />;
   }
 }
 
@@ -37,22 +40,27 @@ export default function App() {
       <Navbar />
 
       <Routes>
-        {/* Public Home */}
+        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
-
-        {/* Store front (listing) */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/store/:storeId" element={<StorePage />} />
-
-        {/* Individual product detail */}
         <Route path="/product/:productId" element={<ProductPage />} />
-
-        {/* Cart page */}
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/order-confirmation/:storeId" element={<OrderConfirmationPage />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Checkout page */}
-        <Route path="/checkout" element={<CheckoutPage />} />
+        {/* Protected Checkout */}
+        <Route
+          path="/checkout"
+          element={
+            <RequireAuth allowedRoles={['customer', 'admin', 'store_owner', 'store_member']}>
+              <CheckoutPage />
+            </RequireAuth>
+          }
+        />
 
-        {/* Admin */}
+        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -61,7 +69,6 @@ export default function App() {
             </RequireAuth>
           }
         />
-        {/* Admin → Assign owner */}
         <Route
           path="/admin/assign-store-owner"
           element={
@@ -71,7 +78,7 @@ export default function App() {
           }
         />
 
-        {/* Store owner */}
+        {/* Store Owner Routes */}
         <Route
           path="/store-owner"
           element={
@@ -81,7 +88,7 @@ export default function App() {
           }
         />
 
-        {/* Store member */}
+        {/* Store Member Routes */}
         <Route
           path="/store-member"
           element={
@@ -91,8 +98,8 @@ export default function App() {
           }
         />
 
-        {/* Unauthorized fallback */}
-        <Route path="/unauthorized" element={<Unauthorized />} />
+        {/* Fallback Redirect */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );
