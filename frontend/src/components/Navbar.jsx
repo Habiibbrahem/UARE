@@ -179,7 +179,6 @@ const Navbar = () => {
     return (
         <header className={`navbar-container ${isScrolled ? 'scrolled' : ''}`}>
             <div className="announcement-bar">
-                Free shipping on orders over $50 | Use code WELCOME10 for 10% off
             </div>
 
             <nav className="navbar">

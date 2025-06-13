@@ -9,51 +9,82 @@ import {
     ListItemText,
     Toolbar,
     Typography,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material';
+import '../../styles/dashboard.css';
 
 const drawerWidth = 240;
 
 export default function StoreMemberLayout({ children }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     const menuItems = [
         { label: 'Manage Categories', key: 'categories' },
         { label: 'Manage Products', key: 'products' },
-        // add more sections here
     ];
 
     return (
-        <Box sx={{ display: 'flex' }}>
+        <Box className="dashboard-container">
             <Drawer
                 variant="permanent"
                 sx={{
                     width: drawerWidth,
                     flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+                    [`& .MuiDrawer-paper`]: {
+                        width: drawerWidth,
+                        boxSizing: 'border-box',
+                        position: 'fixed',
+                        backgroundColor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
+                        top: '106px',
+                        height: 'calc(100vh - 106px)',
+                        [theme.breakpoints.down('md')]: {
+                            top: '92px',
+                            height: 'calc(100vh - 92px)',
+                        }
+                    },
                 }}
+                className="dashboard-sidebar"
             >
-                <Toolbar>
-                    <Typography variant="h6" noWrap>
+                <Toolbar className="dashboard-sidebar-header">
+                    <Typography variant="h6" noWrap component="div">
                         Store Member Panel
                     </Typography>
                 </Toolbar>
-                <List>
+                <List className="dashboard-menu">
                     {menuItems.map((item, idx) => (
                         <ListItem
                             key={item.key}
                             disablePadding
                             selected={selectedIndex === idx}
                             onClick={() => setSelectedIndex(idx)}
+                            className={`dashboard-menu-item ${selectedIndex === idx ? 'selected' : ''}`}
                         >
-                            <ListItemButton>
-                                <ListItemText primary={item.label} />
+                            <ListItemButton className="dashboard-menu-button">
+                                <ListItemText
+                                    primary={item.label}
+                                    primaryTypographyProps={{
+                                        color: 'inherit',
+                                        fontWeight: selectedIndex === idx ? '600' : '400'
+                                    }}
+                                />
                             </ListItemButton>
                         </ListItem>
                     ))}
                 </List>
             </Drawer>
 
-            <Box component="main" sx={{ flexGrow: 1, p: 3, ml: `${drawerWidth}px` }}>
+            <Box
+                component="main"
+                className="dashboard-main-content"
+                sx={{
+                    marginLeft: isMobile ? 0 : `${drawerWidth}px`,
+                    width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`,
+                }}
+            >
                 {typeof children === 'function'
                     ? children(menuItems[selectedIndex].key)
                     : children}

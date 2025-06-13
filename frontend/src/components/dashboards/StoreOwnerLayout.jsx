@@ -1,6 +1,15 @@
 // src/components/dashboards/StoreOwnerLayout.jsx
 import React, { useState } from 'react';
-import { Box, Drawer, List, ListItem, ListItemText, Toolbar, Typography } from '@mui/material';
+import {
+    Box,
+    Drawer,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    Toolbar,
+    Typography,
+} from '@mui/material';
 
 const drawerWidth = 240;
 
@@ -10,7 +19,7 @@ export default function StoreOwnerLayout({ children }) {
     const menuItems = [
         { label: 'Manage Members', key: 'members' },
         { label: 'Manage Orders', key: 'orders' },
-        // You can add more items here later (e.g. Store Info)
+        // Additional menu items can be added here
     ];
 
     const handleListItemClick = (index) => {
@@ -24,7 +33,13 @@ export default function StoreOwnerLayout({ children }) {
                 sx={{
                     width: drawerWidth,
                     flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+                    [`& .MuiDrawer-paper`]: {
+                        width: drawerWidth,
+                        boxSizing: 'border-box',
+                        position: 'fixed', // Fixed positioning
+                        top: '70px', // Start below the navbar
+                        height: 'calc(100vh - 70px)', // Make it the full height minus the navbar
+                    },
                 }}
             >
                 <Toolbar>
@@ -45,7 +60,16 @@ export default function StoreOwnerLayout({ children }) {
                     ))}
                 </List>
             </Drawer>
-            <Box component="main" sx={{ flexGrow: 1, p: 3, ml: `${drawerWidth}px` }}>
+
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    p: 3,
+                    ml: `${drawerWidth}px`, // Add margin to the left of the content
+                    marginTop: '70px', // Make sure content starts below the navbar
+                }}
+            >
                 {typeof children === 'function' ? children(menuItems[selectedIndex].key) : children}
             </Box>
         </Box>

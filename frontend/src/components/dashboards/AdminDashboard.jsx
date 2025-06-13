@@ -10,7 +10,7 @@ export default function AdminDashboard() {
         <AdminLayout>
             {(selectedKey) => {
                 switch (selectedKey) {
-                    case 'categories': // <-- Handle categories key
+                    case 'categories':
                         return <CategoriesManagement />;
                     case 'storeOwners':
                         return <StoreOwnersManagement />;
@@ -18,8 +18,6 @@ export default function AdminDashboard() {
                         return <StoresManagement />;
                     case 'assignStoreOwner':
                         return <AssignStoreOwner />;
-
-
                     default:
                         return <div>Select a section from the sidebar</div>;
                 }

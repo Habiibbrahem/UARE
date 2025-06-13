@@ -1,7 +1,7 @@
 // src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-
+import { Box } from '@mui/material';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import StorePage from './pages/StorePage';
@@ -37,70 +37,73 @@ function RequireAuth({ children, allowedRoles }) {
 export default function App() {
   return (
     <Router>
-      <Navbar />
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Navbar />
+        <Box component="main" sx={{ flexGrow: 1 }}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/store/:storeId" element={<StorePage />} />
+            <Route path="/product/:productId" element={<ProductPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/order-confirmation/:storeId" element={<OrderConfirmationPage />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
 
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/store/:storeId" element={<StorePage />} />
-        <Route path="/product/:productId" element={<ProductPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/order-confirmation/:storeId" element={<OrderConfirmationPage />} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
+            {/* Protected Checkout */}
+            <Route
+              path="/checkout"
+              element={
+                <RequireAuth allowedRoles={['customer', 'admin', 'store_owner', 'store_member']}>
+                  <CheckoutPage />
+                </RequireAuth>
+              }
+            />
 
-        {/* Protected Checkout */}
-        <Route
-          path="/checkout"
-          element={
-            <RequireAuth allowedRoles={['customer', 'admin', 'store_owner', 'store_member']}>
-              <CheckoutPage />
-            </RequireAuth>
-          }
-        />
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <RequireAuth allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/assign-store-owner"
+              element={
+                <RequireAuth allowedRoles={['admin']}>
+                  <AssignStoreOwner />
+                </RequireAuth>
+              }
+            />
 
-        {/* Admin Routes */}
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth allowedRoles={['admin']}>
-              <AdminDashboard />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/assign-store-owner"
-          element={
-            <RequireAuth allowedRoles={['admin']}>
-              <AssignStoreOwner />
-            </RequireAuth>
-          }
-        />
+            {/* Store Owner Routes */}
+            <Route
+              path="/store-owner"
+              element={
+                <RequireAuth allowedRoles={['store_owner']}>
+                  <StoreOwnerDashboard />
+                </RequireAuth>
+              }
+            />
 
-        {/* Store Owner Routes */}
-        <Route
-          path="/store-owner"
-          element={
-            <RequireAuth allowedRoles={['store_owner']}>
-              <StoreOwnerDashboard />
-            </RequireAuth>
-          }
-        />
+            {/* Store Member Routes */}
+            <Route
+              path="/store-member"
+              element={
+                <RequireAuth allowedRoles={['store_member']}>
+                  <StoreMemberDashboard />
+                </RequireAuth>
+              }
+            />
 
-        {/* Store Member Routes */}
-        <Route
-          path="/store-member"
-          element={
-            <RequireAuth allowedRoles={['store_member']}>
-              <StoreMemberDashboard />
-            </RequireAuth>
-          }
-        />
-
-        {/* Fallback Redirect */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+            {/* Fallback Redirect */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Box>
+      </Box>
     </Router>
   );
 }

@@ -4,31 +4,219 @@ import { useParams, Link } from 'react-router-dom';
 import {
     Box,
     CircularProgress,
-    Grid,
     Typography,
     Card,
     CardMedia,
-    CardContent,
-    CardActions,
     Button,
     TextField,
-    MenuItem,
     Divider,
     Chip,
-    Breadcrumbs
+    Breadcrumbs,
+    IconButton,
+    Rating,
+    Alert,
+    Skeleton,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    List,
+    ListItem,
+    ListItemText
 } from '@mui/material';
-import { ShoppingCart, Favorite, Share } from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
+import { ShoppingCart, Favorite, Share, ExpandMore } from '@mui/icons-material';
+
 import axiosInstance from '../services/axiosInstance';
 import { getProductById } from '../services/productService';
 import useCartStore from '../store/useCartStore';
+
+// ─── Styled Components ──────────────────────────────────────────────────────────
+
+const PageContainer = styled(Box)(({ theme }) => ({
+    paddingTop: theme.spacing(12), // Proper spacing below navbar
+    paddingBottom: theme.spacing(6),
+    backgroundColor: theme.palette.background.default,
+}));
+
+const ProductContainer = styled(Box)(({ theme }) => ({
+    maxWidth: 1400,
+    margin: '0 auto',
+    padding: theme.spacing(4),
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: theme.shape.borderRadius * 2,
+    boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
+}));
+
+const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
+    marginBottom: theme.spacing(3),
+    '& a': {
+        textDecoration: 'none',
+        color: theme.palette.primary.main,
+        '&:hover': {
+            textDecoration: 'underline',
+        },
+    },
+}));
+
+const ProductGrid = styled('div')(({ theme }) => ({
+    display: 'grid',
+    gridTemplateColumns: '1.2fr 1fr',
+    gap: theme.spacing(6),
+    [theme.breakpoints.down('lg')]: {
+        gridTemplateColumns: '1fr',
+        gap: theme.spacing(4),
+    },
+}));
+
+const ImageCard = styled(Card)(({ theme }) => ({
+    borderRadius: theme.shape.borderRadius * 3,
+    boxShadow: 'none',
+    border: `1px solid ${theme.palette.divider}`,
+    overflow: 'hidden',
+    transition: 'transform 0.3s ease',
+    '&:hover': {
+        transform: 'scale(1.02)',
+    },
+}));
+
+const ProductImage = styled(CardMedia)(() => ({
+    objectFit: 'contain',
+    width: '100%',
+    height: 500,
+    backgroundColor: '#f9f9f9',
+}));
+
+const ThumbnailContainer = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    gap: theme.spacing(2),
+    marginTop: theme.spacing(2),
+}));
+
+const Thumbnail = styled('img')(({ theme, selected }) => ({
+    width: 60,
+    height: 60,
+    objectFit: 'cover',
+    borderRadius: theme.shape.borderRadius,
+    cursor: 'pointer',
+    border: selected ? `2px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
+    opacity: selected ? 1 : 0.7,
+    transition: 'all 0.2s ease',
+    '&:hover': {
+        opacity: 1,
+    },
+}));
+
+const DetailSection = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(3),
+}));
+
+const ProductTitle = styled(Typography)(({ theme }) => ({
+    fontWeight: 700,
+    lineHeight: 1.2,
+    marginBottom: theme.spacing(2),
+    fontSize: '2rem',
+    [theme.breakpoints.down('sm')]: {
+        fontSize: '1.5rem',
+    },
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+    fontWeight: 600,
+    color: theme.palette.text.secondary,
+    marginBottom: theme.spacing(1),
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontSize: '0.85rem',
+}));
+
+const ProductDescription = styled(Typography)(({ theme }) => ({
+    color: theme.palette.text.secondary,
+    lineHeight: 1.7,
+    marginBottom: theme.spacing(3),
+}));
+
+const PriceBox = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1.5),
+    marginBottom: theme.spacing(1),
+}));
+
+const OriginalPrice = styled(Typography)(({ theme }) => ({
+    textDecoration: 'line-through',
+    color: theme.palette.text.disabled,
+}));
+
+const VariantSection = styled(Box)(({ theme }) => ({
+    marginBottom: theme.spacing(3),
+    '& .MuiChip-root': {
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        borderRadius: theme.shape.borderRadius,
+        fontWeight: 500,
+        marginRight: theme.spacing(1),
+        marginBottom: theme.spacing(1),
+    },
+    '& .MuiChip-root:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: theme.shadows[1],
+    },
+    '& .MuiChip-filled': {
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText,
+    },
+}));
+
+const QuantityField = styled(TextField)(({ theme }) => ({
+    maxWidth: 100,
+    '& .MuiOutlinedInput-root': {
+        borderRadius: theme.shape.borderRadius * 2,
+    },
+}));
+
+const ActionsBox = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    gap: theme.spacing(2),
+    alignItems: 'center',
+    marginTop: theme.spacing(3),
+    '& .MuiButton-root': {
+        padding: theme.spacing(1.5, 3),
+        borderRadius: theme.shape.borderRadius * 2,
+        textTransform: 'none',
+        fontWeight: 600,
+        letterSpacing: 0.5,
+        boxShadow: 'none',
+        '&:hover': {
+            boxShadow: theme.shadows[2],
+            transform: 'translateY(-2px)',
+        },
+        '&:active': {
+            transform: 'translateY(0)',
+        },
+    },
+    '& .MuiIconButton-root': {
+        border: `1px solid ${theme.palette.divider}`,
+        transition: 'all 0.2s ease',
+        '&:hover': {
+            backgroundColor: theme.palette.action.hover,
+            transform: 'scale(1.1)',
+        },
+    },
+}));
+
+// ─── Component ─────────────────────────────────────────────────────────────────
 
 export default function ProductPage() {
     const { productId } = useParams();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [selectedColor, setSelectedColor] = useState('');
     const [selectedSize, setSelectedSize] = useState('');
+    const [mainImage, setMainImage] = useState('');
     const addToCart = useCartStore((state) => state.addToCart);
 
     useEffect(() => {
@@ -36,22 +224,59 @@ export default function ProductPage() {
         getProductById(productId)
             .then((res) => {
                 setProduct(res.data);
+                setMainImage(res.data.image);
                 if (res.data.colors?.length) setSelectedColor(res.data.colors[0]);
                 if (res.data.sizes?.length) setSelectedSize(res.data.sizes[0]);
+            })
+            .catch((err) => {
+                setError(err.message || 'Failed to load product');
             })
             .finally(() => setLoading(false));
     }, [productId]);
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" mt={4}>
-                <CircularProgress />
-            </Box>
+            <PageContainer>
+                <ProductContainer>
+                    <Skeleton variant="rectangular" width="100%" height={500} />
+                    <Box mt={4}>
+                        <Skeleton variant="text" width="60%" height={60} />
+                        <Skeleton variant="text" width="30%" height={40} />
+                        <Box display="flex" gap={2} my={2}>
+                            <Skeleton variant="circular" width={40} height={40} />
+                            <Skeleton variant="circular" width={40} height={40} />
+                            <Skeleton variant="circular" width={40} height={40} />
+                        </Box>
+                        <Skeleton variant="text" width="80%" height={100} />
+                        <Skeleton variant="rectangular" width={200} height={50} sx={{ mt: 3 }} />
+                    </Box>
+                </ProductContainer>
+            </PageContainer>
+        );
+    }
+
+    if (error) {
+        return (
+            <PageContainer>
+                <Box display="flex" justifyContent="center" mt={4}>
+                    <Alert severity="error" sx={{ maxWidth: 600 }}>
+                        {error}
+                    </Alert>
+                </Box>
+            </PageContainer>
         );
     }
 
     if (!product) {
-        return <Typography color="error">Product not found.</Typography>;
+        return (
+            <PageContainer>
+                <Box display="flex" justifyContent="center" mt={4}>
+                    <Alert severity="warning" sx={{ maxWidth: 600 }}>
+                        Product not found
+                    </Alert>
+                </Box>
+            </PageContainer>
+        );
     }
 
     const handleAddToCart = () => {
@@ -67,130 +292,170 @@ export default function ProductPage() {
         });
     };
 
+    const images = [product.image, ...(product.additionalImages || [])];
+
     return (
-        <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
-            <Breadcrumbs sx={{ mb: 3 }}>
-                <Link to="/">Home</Link>
-                <Link to={`/store/${product.storeId}`}>Store</Link>
-                <Typography color="text.primary">{product.name}</Typography>
-            </Breadcrumbs>
+        <PageContainer>
+            <ProductContainer>
+                <StyledBreadcrumbs aria-label="breadcrumb">
+                    <Link to="/">Home</Link>
+                    <Link to={`/store/${product.storeId}`}>Store</Link>
+                    <Typography color="text.primary">{product.name}</Typography>
+                </StyledBreadcrumbs>
 
-            <Grid container spacing={4}>
-                {/* Left: Product Image */}
-                <Grid item xs={12} md={6}>
-                    <Card sx={{ borderRadius: 2 }}>
-                        <CardMedia
-                            component="img"
-                            image={`${axiosInstance.defaults.baseURL}${product.image}`}
-                            alt={product.name}
-                            sx={{
-                                objectFit: 'contain',
-                                height: 400,
-                                p: 2
-                            }}
-                        />
-                    </Card>
-                </Grid>
+                <ProductGrid>
+                    <Box>
+                        <ImageCard>
+                            <ProductImage
+                                component="img"
+                                image={`${axiosInstance.defaults.baseURL}${mainImage}`}
+                                alt={product.name}
+                            />
+                        </ImageCard>
+                        {images.length > 1 && (
+                            <ThumbnailContainer>
+                                {images.map((img, index) => (
+                                    <Thumbnail
+                                        key={index}
+                                        src={`${axiosInstance.defaults.baseURL}${img}`}
+                                        onClick={() => setMainImage(img)}
+                                        selected={mainImage === img}
+                                        alt={`Thumbnail ${index + 1}`}
+                                    />
+                                ))}
+                            </ThumbnailContainer>
+                        )}
+                    </Box>
 
-                {/* Right: Details */}
-                <Grid item xs={12} md={6}>
-                    <Typography variant="h4" gutterBottom>
-                        {product.name}
-                    </Typography>
+                    <DetailSection>
+                        <ProductTitle variant="h1">{product.name}</ProductTitle>
 
-                    {product.discount ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h5" color="primary" sx={{ fontWeight: 600, mr: 2 }}>
-                                ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                        <Box display="flex" alignItems="center" gap={1} mb={2}>
+                            <Rating value={product.rating || 0} precision={0.5} readOnly />
+                            <Typography variant="body2" color="text.secondary">
+                                ({product.reviewCount || 0} reviews)
                             </Typography>
-                            <Typography variant="body1" color="text.disabled" sx={{ textDecoration: 'line-through' }}>
+                        </Box>
+
+                        {product.discount ? (
+                            <PriceBox>
+                                <Typography variant="h4" color="primary">
+                                    ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                                </Typography>
+                                <OriginalPrice variant="body1">
+                                    ${product.price.toFixed(2)}
+                                </OriginalPrice>
+                                <Chip label={`${product.discount}% OFF`} color="error" size="small" />
+                            </PriceBox>
+                        ) : (
+                            <Typography variant="h4" color="primary">
                                 ${product.price.toFixed(2)}
                             </Typography>
-                            <Chip
-                                label={`${product.discount}% OFF`}
-                                color="error"
+                        )}
+
+                        {product.stock > 0 ? (
+                            <Typography variant="body2" color="success.main">
+                                In Stock ({product.stock} available)
+                            </Typography>
+                        ) : (
+                            <Typography variant="body2" color="error">
+                                Out of Stock
+                            </Typography>
+                        )}
+
+                        <ProductDescription variant="body1">
+                            {product.description}
+                        </ProductDescription>
+                        <Divider />
+
+                        {product.colors?.length > 0 && (
+                            <VariantSection>
+                                <SectionTitle>Color</SectionTitle>
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                    {product.colors.map((c) => (
+                                        <Chip
+                                            key={c}
+                                            label={c}
+                                            onClick={() => setSelectedColor(c)}
+                                            variant={selectedColor === c ? 'filled' : 'outlined'}
+                                            color="primary"
+                                        />
+                                    ))}
+                                </Box>
+                            </VariantSection>
+                        )}
+
+                        {product.sizes?.length > 0 && (
+                            <VariantSection>
+                                <SectionTitle>Size</SectionTitle>
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                    {product.sizes.map((s) => (
+                                        <Chip
+                                            key={s}
+                                            label={s}
+                                            onClick={() => setSelectedSize(s)}
+                                            variant={selectedSize === s ? 'filled' : 'outlined'}
+                                            color="primary"
+                                        />
+                                    ))}
+                                </Box>
+                            </VariantSection>
+                        )}
+
+                        <VariantSection>
+                            <SectionTitle>Quantity</SectionTitle>
+                            <QuantityField
+                                type="number"
+                                value={quantity}
+                                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                                inputProps={{ min: 1 }}
+                                variant="outlined"
                                 size="small"
-                                sx={{ ml: 2 }}
                             />
-                        </Box>
-                    ) : (
-                        <Typography variant="h5" color="primary" sx={{ fontWeight: 600, mb: 2 }}>
-                            ${product.price.toFixed(2)}
-                        </Typography>
-                    )}
+                        </VariantSection>
 
-                    <Typography variant="body1" paragraph>
-                        {product.description}
-                    </Typography>
+                        <ActionsBox>
+                            <Button
+                                variant="contained"
+                                size="large"
+                                startIcon={<ShoppingCart />}
+                                onClick={handleAddToCart}
+                                disabled={product.stock <= 0}
+                            >
+                                Add to Cart
+                            </Button>
+                            <IconButton aria-label="add to favorites">
+                                <Favorite />
+                            </IconButton>
+                            <IconButton aria-label="share">
+                                <Share />
+                            </IconButton>
+                        </ActionsBox>
 
-                    <Divider sx={{ my: 3 }} />
-
-                    {/* Variant selectors */}
-                    {product.colors?.length > 0 && (
-                        <Box mb={2}>
-                            <Typography variant="subtitle2" gutterBottom>Color</Typography>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                {product.colors.map((color) => (
-                                    <Chip
-                                        key={color}
-                                        label={color}
-                                        onClick={() => setSelectedColor(color)}
-                                        variant={selectedColor === color ? 'filled' : 'outlined'}
-                                        color="primary"
-                                    />
-                                ))}
-                            </Box>
-                        </Box>
-                    )}
-
-                    {product.sizes?.length > 0 && (
-                        <Box mb={3}>
-                            <Typography variant="subtitle2" gutterBottom>Size</Typography>
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                {product.sizes.map((size) => (
-                                    <Chip
-                                        key={size}
-                                        label={size}
-                                        onClick={() => setSelectedSize(size)}
-                                        variant={selectedSize === size ? 'filled' : 'outlined'}
-                                        color="primary"
-                                    />
-                                ))}
-                            </Box>
-                        </Box>
-                    )}
-
-                    {/* Quantity selector */}
-                    <Box mb={3}>
-                        <Typography variant="subtitle2" gutterBottom>Quantity</Typography>
-                        <TextField
-                            type="number"
-                            value={quantity}
-                            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-                            inputProps={{ min: 1 }}
-                            sx={{ width: 100 }}
-                        />
-                    </Box>
-
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            startIcon={<ShoppingCart />}
-                            onClick={handleAddToCart}
-                            sx={{ flexGrow: 1 }}
-                        >
-                            Add to Cart
-                        </Button>
-                        <IconButton size="large">
-                            <Favorite />
-                        </IconButton>
-                        <IconButton size="large">
-                            <Share />
-                        </IconButton>
-                    </Box>
-                </Grid>
-            </Grid>
-        </Box>
+                        <Accordion elevation={0}>
+                            <AccordionSummary expandIcon={<ExpandMore />}>
+                                <Typography fontWeight="500">Product Details</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <Typography paragraph>{product.longDescription || 'No additional details available.'}</Typography>
+                                {product.specifications?.length > 0 && (
+                                    <>
+                                        <Divider sx={{ my: 2 }} />
+                                        <Typography variant="subtitle2">Specifications</Typography>
+                                        <List dense>
+                                            {product.specifications.map((spec, i) => (
+                                                <ListItem key={i}>
+                                                    <ListItemText primary={`${spec.name}: ${spec.value}`} />
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                    </>
+                                )}
+                            </AccordionDetails>
+                        </Accordion>
+                    </DetailSection>
+                </ProductGrid>
+            </ProductContainer>
+        </PageContainer>
     );
 }

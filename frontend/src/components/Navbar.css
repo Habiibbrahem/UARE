@@ -21,11 +21,10 @@
     --z-index-navbar: 1000;
     --z-index-mega-menu: 999;
     --z-index-modal: 2000;
+    --z-index-sidebar: 950;
+    /* Adjusted z-index for sidebar */
 }
 
-/* ===================================== */
-/* BASE STYLES */
-/* ===================================== */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -68,6 +67,8 @@
     max-width: 1800px;
     margin: 0 auto;
     position: relative;
+    z-index: var(--z-index-navbar);
+    /* Ensure navbar is above sidebar */
 }
 
 .navbar-left {
@@ -162,7 +163,8 @@
 .nav-button {
     background: none;
     border: none;
-    font-size: 1rem;
+    font-size: 0.85rem;
+    /* Reduced font size for categories */
     font-weight: 600;
     color: var(--text-dark);
     text-transform: uppercase;

@@ -1,4 +1,3 @@
-// src/components/dashboards/ProductsManagement.jsx
 import React, { useEffect, useState } from 'react';
 import {
     Box,
@@ -20,6 +19,9 @@ import {
     Alert,
     MenuItem,
     Typography,
+    FormControl,
+    InputLabel,
+    Select,
 } from '@mui/material';
 import axiosInstance from '../../services/axiosInstance';
 import {
@@ -28,6 +30,7 @@ import {
     updateProduct,
     deleteProduct,
 } from '../../services/productService';
+import '../../styles/dashboard.css';
 
 export default function ProductsManagement() {
     const [storeId, setStoreId] = useState(undefined);
@@ -37,13 +40,13 @@ export default function ProductsManagement() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [current, setCurrent] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, msg: '', sev: 'success' });
+    const [breadcrumbs, setBreadcrumbs] = useState({});
 
     // On mount: figure out which store this user belongs to (member → owner)
     useEffect(() => {
         let cancelled = false;
 
         async function lookupStore() {
-            // 1) try member endpoint
             try {
                 const member = await axiosInstance.get('/stores/member');
                 if (!cancelled && Array.isArray(member.data) && member.data.length > 0) {
@@ -51,11 +54,8 @@ export default function ProductsManagement() {
                     setStoreId(id);
                     return loadProducts(id);
                 }
-            } catch {
-                // ignore
-            }
+            } catch { }
 
-            // 2) fallback to owner endpoint
             try {
                 const owner = await axiosInstance.get('/stores/owner');
                 if (!cancelled && Array.isArray(owner.data) && owner.data.length > 0) {
@@ -63,19 +63,52 @@ export default function ProductsManagement() {
                     setStoreId(id);
                     return loadProducts(id);
                 }
-            } catch {
-                // ignore
-            }
+            } catch { }
 
-            // 3) no store
             if (!cancelled) setStoreId(null);
         }
 
         lookupStore();
-        axiosInstance.get('/categories').then(res => setCategories(res.data));
+        axiosInstance.get('/categories').then(res => {
+            setCategories(res.data);
+            setBreadcrumbs(computeBreadcrumbs(res.data));
+        });
 
         return () => { cancelled = true; };
     }, []);
+
+    // Compute breadcrumb paths for all categories
+    const computeBreadcrumbs = (categories) => {
+        const lookup = {};
+        categories.forEach(cat => {
+            lookup[cat._id] = cat;
+        });
+
+        const memo = {};
+
+        const buildPath = (id) => {
+            if (!id) return '';
+            if (memo[id]) return memo[id];
+
+            const node = lookup[id];
+            if (!node) return '';
+
+            if (!node.parentId) {
+                memo[id] = node.name;
+                return memo[id];
+            }
+
+            const parentPath = buildPath(node.parentId);
+            memo[id] = parentPath ? `${parentPath} › ${node.name}` : node.name;
+            return memo[id];
+        };
+
+        categories.forEach(cat => {
+            buildPath(cat._id);
+        });
+
+        return memo;
+    };
 
     // Fetch products for a given store
     function loadProducts(id) {
@@ -88,7 +121,7 @@ export default function ProductsManagement() {
     // While figuring out storeId
     if (storeId === undefined) {
         return (
-            <Box display="flex" justifyContent="center" mt={4}>
+            <Box className="dashboard-loading">
                 <CircularProgress />
             </Box>
         );
@@ -97,7 +130,7 @@ export default function ProductsManagement() {
     // No access
     if (storeId === null) {
         return (
-            <Typography color="error" align="center" mt={4}>
+            <Typography className="dashboard-error-message" align="center">
                 You do not have access to a store.
             </Typography>
         );
@@ -167,16 +200,21 @@ export default function ProductsManagement() {
     };
 
     return (
-        <Box p={2}>
-            <Button variant="contained" onClick={() => openForm()} sx={{ mb: 2 }}>
-                Add Product
-            </Button>
+        <Box className="dashboard-card">
+            <Box className="dashboard-title">
+                <Typography variant="h5">Products Management</Typography>
+                <Button variant="contained" onClick={() => openForm()} className="dashboard-primary-button">
+                    Add Product
+                </Button>
+            </Box>
 
             {loading ? (
-                <CircularProgress />
+                <Box className="dashboard-loading">
+                    <CircularProgress />
+                </Box>
             ) : (
                 <TableContainer component={Paper}>
-                    <Table size="small">
+                    <Table className="dashboard-table">
                         <TableHead>
                             <TableRow>
                                 <TableCell>Name</TableCell>
@@ -191,23 +229,42 @@ export default function ProductsManagement() {
                         <TableBody>
                             {products.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} align="center">No products</TableCell>
+                                    <TableCell colSpan={7} align="center" className="dashboard-no-data">
+                                        No products found
+                                    </TableCell>
                                 </TableRow>
                             ) : products.map(p => (
-                                <TableRow key={p._id}>
+                                <TableRow key={p._id} className="dashboard-category-row">
                                     <TableCell>{p.name}</TableCell>
                                     <TableCell>{p.description || '-'}</TableCell>
                                     <TableCell>
                                         {p.image
-                                            ? <img src={`${axiosInstance.defaults.baseURL}${p.image}`} alt={p.name} width={50} />
+                                            ? <img
+                                                src={`${axiosInstance.defaults.baseURL}${p.image}`}
+                                                alt={p.name}
+                                                className="dashboard-image-preview"
+                                            />
                                             : '-'}
                                     </TableCell>
                                     <TableCell>${p.price.toFixed(2)}</TableCell>
                                     <TableCell>{p.quantity}</TableCell>
-                                    <TableCell>{p.categoryId?.name || '-'}</TableCell>
+                                    <TableCell>{breadcrumbs[p.categoryId?._id || p.categoryId] || '-'}</TableCell>
                                     <TableCell align="right">
-                                        <Button size="small" onClick={() => openForm(p)}>Edit</Button>{' '}
-                                        <Button size="small" color="error" onClick={() => remove(p._id)}>Delete</Button>
+                                        <Button
+                                            size="small"
+                                            onClick={() => openForm(p)}
+                                            className="dashboard-action-button edit"
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            size="small"
+                                            color="error"
+                                            onClick={() => remove(p._id)}
+                                            className="dashboard-action-button delete"
+                                        >
+                                            Delete
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -219,54 +276,71 @@ export default function ProductsManagement() {
             <Dialog open={dialogOpen} onClose={closeForm}>
                 <DialogTitle>{current?._id ? 'Edit Product' : 'Add Product'}</DialogTitle>
                 <DialogContent>
-                    <TextField
-                        fullWidth margin="dense" label="Name"
-                        value={current?.name || ''}
-                        onChange={e => setCurrent(c => ({ ...c, name: e.target.value }))}
-                    />
-                    <TextField
-                        fullWidth margin="dense" label="Description"
-                        value={current?.description || ''}
-                        onChange={e => setCurrent(c => ({ ...c, description: e.target.value }))}
-                    />
+                    <Box className="dashboard-form-input">
+                        <TextField
+                            fullWidth margin="dense" label="Name"
+                            value={current?.name || ''}
+                            onChange={e => setCurrent(c => ({ ...c, name: e.target.value }))}
+                        />
+                    </Box>
+                    <Box className="dashboard-form-input">
+                        <TextField
+                            fullWidth margin="dense" label="Description"
+                            value={current?.description || ''}
+                            onChange={e => setCurrent(c => ({ ...c, description: e.target.value }))}
+                        />
+                    </Box>
                     {current?.existingImage && (
                         <Box mb={1}>
                             <img
                                 src={`${axiosInstance.defaults.baseURL}${current.existingImage}`}
                                 alt="current"
-                                width={100}
+                                className="dashboard-image-preview"
                             />
                         </Box>
                     )}
-                    <Button variant="outlined" component="label" sx={{ mb: 1 }}>
-                        Upload Image
-                        <input type="file" hidden accept="image/*" onChange={onFile} />
-                    </Button>
-                    {current?.imageFile && <Typography>{current.imageFile.name}</Typography>}
-                    <TextField
-                        fullWidth margin="dense" type="number" label="Price"
-                        value={current?.price || 0}
-                        onChange={e => setCurrent(c => ({ ...c, price: +e.target.value }))}
-                    />
-                    <TextField
-                        fullWidth margin="dense" type="number" label="Quantity"
-                        value={current?.quantity || 0}
-                        onChange={e => setCurrent(c => ({ ...c, quantity: +e.target.value }))}
-                    />
-                    <TextField
-                        select fullWidth margin="dense" label="Category"
-                        value={current?.categoryId || ''}
-                        onChange={e => setCurrent(c => ({ ...c, categoryId: e.target.value }))}
-                    >
-                        <MenuItem value="">— none —</MenuItem>
-                        {categories.map(c => (
-                            <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
-                        ))}
-                    </TextField>
+                    <Box className="dashboard-file-upload">
+                        <Button variant="outlined" component="label" className="dashboard-file-upload-button">
+                            Upload Image
+                            <input type="file" hidden accept="image/*" onChange={onFile} />
+                        </Button>
+                        {current?.imageFile && <Typography>{current.imageFile.name}</Typography>}
+                    </Box>
+                    <Box className="dashboard-form-input">
+                        <TextField
+                            fullWidth margin="dense" type="number" label="Price"
+                            value={current?.price || 0}
+                            onChange={e => setCurrent(c => ({ ...c, price: +e.target.value }))}
+                        />
+                    </Box>
+                    <Box className="dashboard-form-input">
+                        <TextField
+                            fullWidth margin="dense" type="number" label="Quantity"
+                            value={current?.quantity || 0}
+                            onChange={e => setCurrent(c => ({ ...c, quantity: +e.target.value }))}
+                        />
+                    </Box>
+                    <Box className="dashboard-form-input">
+                        <FormControl fullWidth margin="dense">
+                            <InputLabel>Category</InputLabel>
+                            <Select
+                                label="Category"
+                                value={current?.categoryId || ''}
+                                onChange={e => setCurrent(c => ({ ...c, categoryId: e.target.value }))}
+                            >
+                                <MenuItem value="">— none —</MenuItem>
+                                {categories.map(c => (
+                                    <MenuItem key={c._id} value={c._id}>
+                                        {breadcrumbs[c._id] || c.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={closeForm}>Cancel</Button>
-                    <Button onClick={saveProduct} variant="contained">Save</Button>
+                <DialogActions className="dashboard-dialog-actions">
+                    <Button onClick={closeForm} className="dashboard-secondary-button">Cancel</Button>
+                    <Button onClick={saveProduct} className="dashboard-primary-button">Save</Button>
                 </DialogActions>
             </Dialog>
 

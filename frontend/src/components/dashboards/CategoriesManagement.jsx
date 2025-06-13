@@ -26,13 +26,14 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete, ExpandMore, ExpandLess } from '@mui/icons-material';
 import axios from 'axios';
+import '../../styles/dashboard.css';
 
 const API_BASE = 'http://localhost:3000';
 
 export default function CategoriesManagement() {
     const [categories, setCategories] = useState([]);          // flat list
     const [tree, setTree] = useState([]);                      // nested tree for table
-    const [breadcrumbs, setBreadcrumbs] = useState({});        // map of id → full “path” string
+    const [breadcrumbs, setBreadcrumbs] = useState({});        // map of id → full "path" string
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -77,7 +78,7 @@ export default function CategoriesManagement() {
         return lookup;
     };
 
-    // 3) Given the flat list, compute a “breadcrumb” string for each category
+    // 3) Given the flat list, compute a "breadcrumb" string for each category
     const computeBreadcrumbs = (list) => {
         const lookup = buildLookup(list);
         const memo = {}; // memo[id] = "Ancestor › ... › Name"
@@ -152,31 +153,42 @@ export default function CategoriesManagement() {
     const renderRows = (nodes, level = 0) =>
         nodes.map((cat) => (
             <React.Fragment key={cat._id}>
-                <TableRow>
-                    <TableCell style={{ paddingLeft: 20 * level }}>
+                <TableRow className="dashboard-category-row">
+                    <TableCell className="dashboard-category-name-cell" style={{ paddingLeft: 20 * level }}>
                         {cat.children.length > 0 && (
-                            <IconButton size="small" onClick={() => toggleExpand(cat._id)}>
+                            <IconButton
+                                size="small"
+                                onClick={() => toggleExpand(cat._id)}
+                                className="dashboard-category-expand-button"
+                            >
                                 {expandedIds.has(cat._id) ? <ExpandLess /> : <ExpandMore />}
                             </IconButton>
                         )}
-                        {!cat.children.length && <span style={{ width: 40, display: 'inline-block' }} />}
+                        {!cat.children.length && <span className="dashboard-category-indent" />}
                         {cat.name}
                     </TableCell>
                     <TableCell>{cat.description || '-'}</TableCell>
                     <TableCell>
                         {cat.parentId
-                            ? // show just the immediate parent’s name
+                            ? // show just the immediate parent's name
                             categories.find((c) => c._id === cat.parentId)?.name || '-'
                             : 'Root'}
                     </TableCell>
                     <TableCell align="right">
                         <Tooltip title="Edit">
-                            <IconButton onClick={() => handleOpenDialog(cat)}>
+                            <IconButton
+                                onClick={() => handleOpenDialog(cat)}
+                                className="dashboard-action-button edit"
+                            >
                                 <Edit />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Delete">
-                            <IconButton color="error" onClick={() => handleDelete(cat._id)}>
+                            <IconButton
+                                color="error"
+                                onClick={() => handleDelete(cat._id)}
+                                className="dashboard-action-button delete"
+                            >
                                 <Delete />
                             </IconButton>
                         </Tooltip>
@@ -262,28 +274,32 @@ export default function CategoriesManagement() {
     };
 
     return (
-        <Box p={2}>
-            <Typography variant="h5" mb={2}>
-                Categories Management
-            </Typography>
-
-            <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenDialog()} sx={{ mb: 2 }}>
-                Add Category
-            </Button>
+        <Box className="dashboard-card">
+            <Box className="dashboard-title">
+                <Typography variant="h5">Categories Management</Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => handleOpenDialog()}
+                    className="dashboard-primary-button"
+                >
+                    Add Category
+                </Button>
+            </Box>
 
             {fetching ? (
-                <Box display="flex" justifyContent="center" mt={3}>
+                <Box className="dashboard-loading">
                     <CircularProgress />
                 </Box>
             ) : error ? (
-                <Typography color="error" variant="body1">
+                <Typography className="dashboard-error-message">
                     {error}
                 </Typography>
             ) : categories.length === 0 ? (
-                <Typography variant="body1">No categories available.</Typography>
+                <Typography className="dashboard-no-data">No categories available.</Typography>
             ) : (
                 <TableContainer component={Paper}>
-                    <Table>
+                    <Table className="dashboard-table">
                         <TableHead>
                             <TableRow>
                                 <TableCell>Name</TableCell>
@@ -300,48 +316,59 @@ export default function CategoriesManagement() {
             <Dialog open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>{selectedCategory?._id ? 'Edit' : 'Add'} Category</DialogTitle>
                 <DialogContent>
-                    <TextField
-                        margin="dense"
-                        label="Name"
-                        name="name"
-                        value={selectedCategory?.name || ''}
-                        onChange={handleInputChange}
-                        fullWidth
-                        required
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Description"
-                        name="description"
-                        value={selectedCategory?.description || ''}
-                        onChange={handleInputChange}
-                        fullWidth
-                    />
-                    <FormControl fullWidth margin="dense">
-                        <InputLabel id="parent-category-label">Parent Category</InputLabel>
-                        <Select
-                            labelId="parent-category-label"
-                            label="Parent Category"
-                            name="parentId"
-                            value={selectedCategory?.parentId || ''}
+                    <Box className="dashboard-form-input">
+                        <TextField
+                            margin="dense"
+                            label="Name"
+                            name="name"
+                            value={selectedCategory?.name || ''}
                             onChange={handleInputChange}
-                            displayEmpty
-                        >
-                            <MenuItem value="">None (Root category)</MenuItem>
-                            {categories
-                                .filter((cat) => cat._id !== selectedCategory?._id) // exclude self
-                                .map((cat) => (
-                                    <MenuItem key={cat._id} value={cat._id}>
-                                        {/* display full breadcrumb path rather than raw name */}
-                                        {breadcrumbs[cat._id] || cat.name}
-                                    </MenuItem>
-                                ))}
-                        </Select>
-                    </FormControl>
+                            fullWidth
+                            required
+                        />
+                    </Box>
+                    <Box className="dashboard-form-input">
+                        <TextField
+                            margin="dense"
+                            label="Description"
+                            name="description"
+                            value={selectedCategory?.description || ''}
+                            onChange={handleInputChange}
+                            fullWidth
+                        />
+                    </Box>
+                    <Box className="dashboard-form-input">
+                        <FormControl fullWidth margin="dense">
+                            <InputLabel id="parent-category-label">Parent Category</InputLabel>
+                            <Select
+                                labelId="parent-category-label"
+                                label="Parent Category"
+                                name="parentId"
+                                value={selectedCategory?.parentId || ''}
+                                onChange={handleInputChange}
+                                displayEmpty
+                            >
+                                <MenuItem value="">None (Root category)</MenuItem>
+                                {categories
+                                    .filter((cat) => cat._id !== selectedCategory?._id) // exclude self
+                                    .map((cat) => (
+                                        <MenuItem key={cat._id} value={cat._id}>
+                                            {/* display full breadcrumb path rather than raw name */}
+                                            {breadcrumbs[cat._id] || cat.name}
+                                        </MenuItem>
+                                    ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancel</Button>
-                    <Button variant="contained" onClick={handleSave} disabled={loading}>
+                <DialogActions className="dashboard-dialog-actions">
+                    <Button onClick={handleCloseDialog} className="dashboard-secondary-button">Cancel</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleSave}
+                        disabled={loading}
+                        className="dashboard-primary-button"
+                    >
                         {loading ? 'Saving...' : 'Save'}
                     </Button>
                 </DialogActions>
