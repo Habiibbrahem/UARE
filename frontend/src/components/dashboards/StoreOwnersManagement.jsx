@@ -15,19 +15,21 @@ import {
     TableHead,
     TableRow,
     TextField,
-    Tooltip,
     Typography,
+    CircularProgress,
 } from '@mui/material';
-import { Delete, Edit, Add } from '@mui/icons-material';
+import { Add, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
+import '../../styles/admin/dashboardadmin.css';
 
+// StoreOwnersManagement: Manages store owners with a table and dialog for add/edit
 export default function StoreOwnersManagement() {
     const [owners, setOwners] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedOwner, setSelectedOwner] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    // Fetch store owners with their stores populated
+    // Fetch store owners
     const fetchOwners = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -46,7 +48,6 @@ export default function StoreOwnersManagement() {
 
     const handleOpenDialog = (owner = null) => {
         if (owner) {
-            // When editing, don't allow clearing password field
             setSelectedOwner({ ...owner, password: '' });
         } else {
             setSelectedOwner({ name: '', email: '', password: '', role: 'store_owner' });
@@ -76,20 +77,22 @@ export default function StoreOwnersManagement() {
         try {
             const token = localStorage.getItem('token');
             if (selectedOwner._id) {
-                // Update existing owner (don't send empty password)
                 const updateData = { ...selectedOwner };
                 if (!updateData.password) delete updateData.password;
-
                 await axios.put(
                     `http://localhost:3000/users/${selectedOwner._id}`,
                     updateData,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
             } else {
-                // Create new owner, enforce role to store_owner
                 await axios.post(
                     'http://localhost:3000/users',
-                    { name: selectedOwner.name, email: selectedOwner.email, password: selectedOwner.password, role: 'store_owner' },
+                    {
+                        name: selectedOwner.name,
+                        email: selectedOwner.email,
+                        password: selectedOwner.password,
+                        role: 'store_owner',
+                    },
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
             }
@@ -117,24 +120,31 @@ export default function StoreOwnersManagement() {
     };
 
     return (
-        <Box p={2}>
-            <Typography variant="h5" gutterBottom>
-                Store Owners Management
-            </Typography>
+        <Box sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" sx={{ fontWeight: 'medium' }}>
+                    Store Owners Management
+                </Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => handleOpenDialog()}
+                    sx={{
+                        textTransform: 'none',
+                        px: 3,
+                        py: 1,
+                        borderRadius: 1,
+                        '&:hover': { bgcolor: 'primary.dark' },
+                    }}
+                >
+                    Add Store Owner
+                </Button>
+            </Box>
 
-            <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => handleOpenDialog()}
-                sx={{ mb: 2 }}
-            >
-                Add Store Owner
-            </Button>
-
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
                 <Table>
                     <TableHead>
-                        <TableRow>
+                        <TableRow sx={{ bgcolor: 'grey.100' }}>
                             <TableCell>Owner Name</TableCell>
                             <TableCell>Owner Email</TableCell>
                             <TableCell>Assigned Stores</TableCell>
@@ -142,40 +152,44 @@ export default function StoreOwnersManagement() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {owners.length > 0 ? owners.map((owner) => (
-                            <TableRow key={owner._id}>
-                                <TableCell>{owner.name}</TableCell>
-                                <TableCell>{owner.email}</TableCell>
-                                <TableCell>
-                                    {owner.stores && owner.stores.length > 0 ? (
-                                        owner.stores.map((store) => (
-                                            <Typography key={store._id} variant="body2" sx={{ mb: 0.5 }}>
-                                                {store.name} — {store.address}
+                        {owners.length > 0 ? (
+                            owners.map((owner) => (
+                                <TableRow key={owner._id} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+                                    <TableCell>{owner.name}</TableCell>
+                                    <TableCell>{owner.email}</TableCell>
+                                    <TableCell>
+                                        {owner.stores && owner.stores.length > 0 ? (
+                                            owner.stores.map((store) => (
+                                                <Typography key={store._id} variant="body2" sx={{ mb: 0.5 }}>
+                                                    {store.name} — {store.address}
+                                                </Typography>
+                                            ))
+                                        ) : (
+                                            <Typography variant="body2" color="text.secondary">
+                                                <em>No assigned stores</em>
                                             </Typography>
-                                        ))
-                                    ) : (
-                                        <em>No assigned stores</em>
-                                    )}
-                                </TableCell>
-                                <TableCell align="right">
-                                    <Tooltip title="Edit">
-                                        <IconButton onClick={() => handleOpenDialog(owner)}>
+                                        )}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <IconButton
+                                            onClick={() => handleOpenDialog(owner)}
+                                            sx={{ color: 'primary.main', '&:hover': { color: 'primary.dark' } }}
+                                        >
                                             <Edit />
                                         </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Delete">
                                         <IconButton
                                             color="error"
                                             onClick={() => handleDelete(owner._id)}
+                                            sx={{ '&:hover': { color: 'error.dark' } }}
                                         >
                                             <Delete />
                                         </IconButton>
-                                    </Tooltip>
-                                </TableCell>
-                            </TableRow>
-                        )) : (
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
                             <TableRow>
-                                <TableCell colSpan={4} align="center">
+                                <TableCell colSpan={4} sx={{ textAlign: 'center', color: 'grey.600' }}>
                                     No store owners found.
                                 </TableCell>
                             </TableRow>
@@ -184,8 +198,15 @@ export default function StoreOwnersManagement() {
                 </Table>
             </TableContainer>
 
-            <Dialog open={openDialog} onClose={handleCloseDialog}>
-                <DialogTitle>{selectedOwner && selectedOwner._id ? 'Edit' : 'Add'} Store Owner</DialogTitle>
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+                classes={{ paper: 'dashboard-dialog' }}
+                sx={{ '& .MuiDialog-paper': { borderRadius: 2, p: 2 } }}
+            >
+                <DialogTitle sx={{ fontWeight: 'medium' }}>
+                    {selectedOwner && selectedOwner._id ? 'Edit Store Owner' : 'Add Store Owner'}
+                </DialogTitle>
                 <DialogContent>
                     <TextField
                         margin="dense"
@@ -194,6 +215,7 @@ export default function StoreOwnersManagement() {
                         value={selectedOwner?.name || ''}
                         onChange={handleInputChange}
                         fullWidth
+                        sx={{ mb: 2 }}
                     />
                     <TextField
                         margin="dense"
@@ -203,6 +225,7 @@ export default function StoreOwnersManagement() {
                         onChange={handleInputChange}
                         fullWidth
                         type="email"
+                        sx={{ mb: 2 }}
                     />
                     {!selectedOwner?._id && (
                         <TextField
@@ -213,17 +236,29 @@ export default function StoreOwnersManagement() {
                             onChange={handleInputChange}
                             fullWidth
                             type="password"
+                            sx={{ mb: 2 }}
                         />
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancel</Button>
+                <DialogActions sx={{ px: 3, py: 2 }}>
+                    <Button
+                        onClick={handleCloseDialog}
+                        sx={{ textTransform: 'none', color: 'grey.600' }}
+                    >
+                        Cancel
+                    </Button>
                     <Button
                         variant="contained"
                         onClick={handleSave}
                         disabled={loading}
+                        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+                        sx={{
+                            textTransform: 'none',
+                            px: 3,
+                            '&:hover': { bgcolor: 'primary.dark' },
+                        }}
                     >
-                        Save
+                        {loading ? 'Saving...' : 'Save'}
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -1,4 +1,3 @@
-// src/components/dashboards/StoreOwnerDashboard.jsx
 import React from 'react';
 import StoreOwnerLayout from './StoreOwnerLayout';
 import MembersManagement from './MembersManagement';

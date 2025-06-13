@@ -2,15 +2,18 @@ import React, { useEffect, useState } from 'react';
 import {
     Box,
     Button,
+    FormControl,
+    InputLabel,
     MenuItem,
     Select,
-    InputLabel,
-    FormControl,
     Typography,
     Paper,
+    CircularProgress,
 } from '@mui/material';
 import axios from 'axios';
+import '../../styles/admin/dashboardadmin.css';
 
+// AssignStoreOwner: Form to assign a store owner to a store
 export default function AssignStoreOwner() {
     const [stores, setStores] = useState([]);
     const [storeOwners, setStoreOwners] = useState([]);
@@ -71,20 +74,27 @@ export default function AssignStoreOwner() {
     };
 
     return (
-        <Box p={3} maxWidth={600} mx="auto">
-            <Paper sx={{ p: 3 }}>
-                <Typography variant="h5" gutterBottom>
+        <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 'medium' }}>
                     Assign Store Owner to Store
                 </Typography>
-
-                <FormControl fullWidth margin="normal">
+                <FormControl fullWidth sx={{ mb: 3 }}>
                     <InputLabel id="store-select-label">Select Store</InputLabel>
                     <Select
                         labelId="store-select-label"
                         value={selectedStoreId}
                         label="Select Store"
                         onChange={(e) => setSelectedStoreId(e.target.value)}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': { borderColor: 'primary.main' },
+                            },
+                        }}
                     >
+                        <MenuItem value="">
+                            <em>Select a store</em>
+                        </MenuItem>
                         {stores.map((store) => (
                             <MenuItem key={store._id} value={store._id}>
                                 {store.name}
@@ -92,15 +102,22 @@ export default function AssignStoreOwner() {
                         ))}
                     </Select>
                 </FormControl>
-
-                <FormControl fullWidth margin="normal">
+                <FormControl fullWidth sx={{ mb: 3 }}>
                     <InputLabel id="owner-select-label">Select Store Owner</InputLabel>
                     <Select
                         labelId="owner-select-label"
                         value={selectedOwnerId}
                         label="Select Store Owner"
                         onChange={(e) => setSelectedOwnerId(e.target.value)}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': { borderColor: 'primary.main' },
+                            },
+                        }}
                     >
+                        <MenuItem value="">
+                            <em>Select an owner</em>
+                        </MenuItem>
                         {storeOwners.map((owner) => (
                             <MenuItem key={owner._id} value={owner._id}>
                                 {owner.name || owner.email}
@@ -108,15 +125,22 @@ export default function AssignStoreOwner() {
                         ))}
                     </Select>
                 </FormControl>
-
-                <Box mt={3}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
                         variant="contained"
                         color="primary"
                         onClick={handleAssign}
                         disabled={loading}
+                        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+                        sx={{
+                            px: 4,
+                            py: 1.5,
+                            borderRadius: 1,
+                            textTransform: 'none',
+                            '&:hover': { bgcolor: 'primary.dark' },
+                        }}
                     >
-                        Assign Store Owner
+                        {loading ? 'Assigning...' : 'Assign Store Owner'}
                     </Button>
                 </Box>
             </Paper>

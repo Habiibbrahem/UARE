@@ -1,4 +1,3 @@
-// src/components/dashboards/CategoriesManagement.jsx
 import React, { useEffect, useState } from 'react';
 import {
     Box,
@@ -16,24 +15,22 @@ import {
     TableHead,
     TableRow,
     TextField,
-    Tooltip,
-    CircularProgress,
     Typography,
     Select,
     MenuItem,
     InputLabel,
     FormControl,
+    CircularProgress,
 } from '@mui/material';
 import { Add, Edit, Delete, ExpandMore, ExpandLess } from '@mui/icons-material';
 import axios from 'axios';
-import '../../styles/dashboard.css';
+import '../../styles/admin/dashboardadmin.css';
 
-const API_BASE = 'http://localhost:3000';
-
+// CategoriesManagement: Manages categories with a nested table and dialog for add/edit
 export default function CategoriesManagement() {
-    const [categories, setCategories] = useState([]);          // flat list
-    const [tree, setTree] = useState([]);                      // nested tree for table
-    const [breadcrumbs, setBreadcrumbs] = useState({});        // map of id → full "path" string
+    const [categories, setCategories] = useState([]);
+    const [tree, setTree] = useState([]);
+    const [breadcrumbs, setBreadcrumbs] = useState({});
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -41,7 +38,9 @@ export default function CategoriesManagement() {
     const [error, setError] = useState(null);
     const [expandedIds, setExpandedIds] = useState(new Set());
 
-    // 1) Fetch all categories (flat)
+    const API_BASE = 'http://localhost:3000';
+
+    // Fetch categories from API
     const fetchCategories = async () => {
         setFetching(true);
         setError(null);
@@ -56,7 +55,6 @@ export default function CategoriesManagement() {
             const res = await axios.get(`${API_BASE}/categories`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            // Convert backend 'parent' → 'parentId'
             const catsWithParent = res.data.map((cat) => ({
                 ...cat,
                 parentId: cat.parent || null,
@@ -69,7 +67,7 @@ export default function CategoriesManagement() {
         setFetching(false);
     };
 
-    // 2) Build a lookup map id→category for breadcrumb generation
+    // Build lookup map for breadcrumb generation
     const buildLookup = (list) => {
         const lookup = {};
         list.forEach((cat) => {
@@ -78,10 +76,10 @@ export default function CategoriesManagement() {
         return lookup;
     };
 
-    // 3) Given the flat list, compute a "breadcrumb" string for each category
+    // Compute breadcrumb strings for each category
     const computeBreadcrumbs = (list) => {
         const lookup = buildLookup(list);
-        const memo = {}; // memo[id] = "Ancestor › ... › Name"
+        const memo = {};
 
         const buildForId = (id) => {
             if (!id) return '';
@@ -103,7 +101,7 @@ export default function CategoriesManagement() {
         return memo;
     };
 
-    // 4) Build a nested tree for table display
+    // Build nested tree for table display
     const buildTree = (list) => {
         const map = {};
         const roots = [];
@@ -113,13 +111,8 @@ export default function CategoriesManagement() {
         });
 
         list.forEach((cat) => {
-            if (cat.parentId) {
-                if (map[cat.parentId]) {
-                    map[cat.parentId].children.push(map[cat._id]);
-                } else {
-                    // orphan → treat as root
-                    roots.push(map[cat._id]);
-                }
+            if (cat.parentId && map[cat.parentId]) {
+                map[cat.parentId].children.push(map[cat._id]);
             } else {
                 roots.push(map[cat._id]);
             }
@@ -128,12 +121,10 @@ export default function CategoriesManagement() {
         return roots;
     };
 
-    // Fetch categories on mount
     useEffect(() => {
         fetchCategories();
     }, []);
 
-    // Recompute tree and breadcrumbs whenever the flat list changes
     useEffect(() => {
         setTree(buildTree(categories));
         setBreadcrumbs(computeBreadcrumbs(categories));
@@ -149,49 +140,44 @@ export default function CategoriesManagement() {
         setExpandedIds(newExpanded);
     };
 
-    // Render table rows as nested, indenting by level
+    // Render nested table rows
     const renderRows = (nodes, level = 0) =>
         nodes.map((cat) => (
             <React.Fragment key={cat._id}>
-                <TableRow className="dashboard-category-row">
-                    <TableCell className="dashboard-category-name-cell" style={{ paddingLeft: 20 * level }}>
+                <TableRow sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+                    <TableCell sx={{ pl: `${20 * level + 16}px` }}>
                         {cat.children.length > 0 && (
                             <IconButton
                                 size="small"
                                 onClick={() => toggleExpand(cat._id)}
-                                className="dashboard-category-expand-button"
+                                sx={{ mr: 1 }}
                             >
                                 {expandedIds.has(cat._id) ? <ExpandLess /> : <ExpandMore />}
                             </IconButton>
                         )}
-                        {!cat.children.length && <span className="dashboard-category-indent" />}
+                        {!cat.children.length && <Box component="span" sx={{ display: 'inline-block', width: 32 }} />}
                         {cat.name}
                     </TableCell>
                     <TableCell>{cat.description || '-'}</TableCell>
                     <TableCell>
                         {cat.parentId
-                            ? // show just the immediate parent's name
-                            categories.find((c) => c._id === cat.parentId)?.name || '-'
+                            ? categories.find((c) => c._id === cat.parentId)?.name || '-'
                             : 'Root'}
                     </TableCell>
                     <TableCell align="right">
-                        <Tooltip title="Edit">
-                            <IconButton
-                                onClick={() => handleOpenDialog(cat)}
-                                className="dashboard-action-button edit"
-                            >
-                                <Edit />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                            <IconButton
-                                color="error"
-                                onClick={() => handleDelete(cat._id)}
-                                className="dashboard-action-button delete"
-                            >
-                                <Delete />
-                            </IconButton>
-                        </Tooltip>
+                        <IconButton
+                            onClick={() => handleOpenDialog(cat)}
+                            sx={{ color: 'primary.main', '&:hover': { color: 'primary.dark' } }}
+                        >
+                            <Edit />
+                        </IconButton>
+                        <IconButton
+                            color="error"
+                            onClick={() => handleDelete(cat._id)}
+                            sx={{ '&:hover': { color: 'error.dark' } }}
+                        >
+                            <Delete />
+                        </IconButton>
                     </TableCell>
                 </TableRow>
                 {cat.children.length > 0 && expandedIds.has(cat._id) && renderRows(cat.children, level + 1)}
@@ -274,34 +260,44 @@ export default function CategoriesManagement() {
     };
 
     return (
-        <Box className="dashboard-card">
-            <Box className="dashboard-title">
-                <Typography variant="h5">Categories Management</Typography>
+        <Box sx={{ p: 3 }} className="dashboard-card">
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" sx={{ fontWeight: 'medium' }}>
+                    Categories Management
+                </Typography>
                 <Button
                     variant="contained"
                     startIcon={<Add />}
                     onClick={() => handleOpenDialog()}
-                    className="dashboard-primary-button"
+                    sx={{
+                        textTransform: 'none',
+                        px: 3,
+                        py: 1,
+                        borderRadius: 1,
+                        '&:hover': { bgcolor: 'primary.dark' },
+                    }}
                 >
                     Add Category
                 </Button>
             </Box>
 
             {fetching ? (
-                <Box className="dashboard-loading">
+                <Box sx={{ textAlign: 'center', py: 4 }}>
                     <CircularProgress />
                 </Box>
             ) : error ? (
-                <Typography className="dashboard-error-message">
+                <Typography color="error" sx={{ textAlign: 'center' }}>
                     {error}
                 </Typography>
             ) : categories.length === 0 ? (
-                <Typography className="dashboard-no-data">No categories available.</Typography>
+                <Typography sx={{ textAlign: 'center', color: 'grey.600' }}>
+                    No categories available.
+                </Typography>
             ) : (
-                <TableContainer component={Paper}>
+                <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
                     <Table className="dashboard-table">
                         <TableHead>
-                            <TableRow>
+                            <TableRow sx={{ bgcolor: 'grey.100' }}>
                                 <TableCell>Name</TableCell>
                                 <TableCell>Description</TableCell>
                                 <TableCell>Parent Category</TableCell>
@@ -313,61 +309,77 @@ export default function CategoriesManagement() {
                 </TableContainer>
             )}
 
-            <Dialog open={openDialog} onClose={handleCloseDialog}>
-                <DialogTitle>{selectedCategory?._id ? 'Edit' : 'Add'} Category</DialogTitle>
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+                classes={{ paper: 'dashboard-dialog' }}
+                sx={{ '& .MuiDialog-paper': { borderRadius: 2, p: 2 } }}
+            >
+                <DialogTitle sx={{ fontWeight: 'medium' }}>
+                    {selectedCategory?._id ? 'Edit Category' : 'Add Category'}
+                </DialogTitle>
                 <DialogContent>
-                    <Box className="dashboard-form-input">
-                        <TextField
-                            margin="dense"
-                            label="Name"
-                            name="name"
-                            value={selectedCategory?.name || ''}
+                    <TextField
+                        margin="dense"
+                        label="Name"
+                        name="name"
+                        value={selectedCategory?.name || ''}
+                        onChange={handleInputChange}
+                        fullWidth
+                        required
+                        sx={{ mb: 2 }}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Description"
+                        name="description"
+                        value={selectedCategory?.description || ''}
+                        onChange={handleInputChange}
+                        fullWidth
+                        sx={{ mb: 2 }}
+                    />
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                        <InputLabel id="parent-category-label">Parent Category</InputLabel>
+                        <Select
+                            labelId="parent-category-label"
+                            label="Parent Category"
+                            name="parentId"
+                            value={selectedCategory?.parentId || ''}
                             onChange={handleInputChange}
-                            fullWidth
-                            required
-                        />
-                    </Box>
-                    <Box className="dashboard-form-input">
-                        <TextField
-                            margin="dense"
-                            label="Description"
-                            name="description"
-                            value={selectedCategory?.description || ''}
-                            onChange={handleInputChange}
-                            fullWidth
-                        />
-                    </Box>
-                    <Box className="dashboard-form-input">
-                        <FormControl fullWidth margin="dense">
-                            <InputLabel id="parent-category-label">Parent Category</InputLabel>
-                            <Select
-                                labelId="parent-category-label"
-                                label="Parent Category"
-                                name="parentId"
-                                value={selectedCategory?.parentId || ''}
-                                onChange={handleInputChange}
-                                displayEmpty
-                            >
-                                <MenuItem value="">None (Root category)</MenuItem>
-                                {categories
-                                    .filter((cat) => cat._id !== selectedCategory?._id) // exclude self
-                                    .map((cat) => (
-                                        <MenuItem key={cat._id} value={cat._id}>
-                                            {/* display full breadcrumb path rather than raw name */}
-                                            {breadcrumbs[cat._id] || cat.name}
-                                        </MenuItem>
-                                    ))}
-                            </Select>
-                        </FormControl>
-                    </Box>
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    '&:hover fieldset': { borderColor: 'primary.main' },
+                                },
+                            }}
+                        >
+                            <MenuItem value="">None (Root category)</MenuItem>
+                            {categories
+                                .filter((cat) => cat._id !== selectedCategory?._id)
+                                .map((cat) => (
+                                    <MenuItem key={cat._id} value={cat._id}>
+                                        {breadcrumbs[cat._id] || cat.name}
+                                    </MenuItem>
+                                ))}
+                        </Select>
+                    </FormControl>
                 </DialogContent>
-                <DialogActions className="dashboard-dialog-actions">
-                    <Button onClick={handleCloseDialog} className="dashboard-secondary-button">Cancel</Button>
+                <DialogActions sx={{ px: 3, py: 2 }}>
+                    <Button
+                        onClick={handleCloseDialog}
+                        sx={{ textTransform: 'none', color: 'grey.600' }}
+                    >
+                        Cancel
+                    </Button>
                     <Button
                         variant="contained"
                         onClick={handleSave}
                         disabled={loading}
-                        className="dashboard-primary-button"
+                        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+                        sx={{
+                            textTransform: 'none',
+                            px: 3,
+                            '&:hover': { bgcolor: 'primary.dark' },
+                        }}
                     >
                         {loading ? 'Saving...' : 'Save'}
                     </Button>

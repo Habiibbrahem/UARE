@@ -1,16 +1,52 @@
-// src/components/dashboards/MembersManagement.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { createUser } from '../../api/userService';
+import {
+    Box,
+    Typography,
+    Button,
+    CircularProgress,
+    TextField,
+    List,
+    ListItem,
+    ListItemText,
+    Card,
+    Divider,
+    styled
+} from '@mui/material';
 
 const API_BASE = 'http://localhost:3000';
+
+const MemberCard = styled(Card)(({ theme }) => ({
+    padding: theme.spacing(3),
+    borderRadius: theme.shape.borderRadius * 2,
+    boxShadow: theme.shadows[2],
+    marginBottom: theme.spacing(3),
+    backgroundColor: theme.palette.background.paper,
+}));
+
+const MemberListItem = styled(ListItem)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing(1.5, 2),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    '&:last-child': {
+        borderBottom: 'none',
+    },
+}));
+
+const FormInput = styled(TextField)(({ theme }) => ({
+    '& .MuiOutlinedInput-root': {
+        borderRadius: theme.shape.borderRadius,
+    },
+}));
 
 export default function MembersManagement() {
     const [store, setStore] = useState(null);
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
     const [newMember, setNewMember] = useState({
         name: '',
         email: '',
@@ -25,12 +61,10 @@ export default function MembersManagement() {
                 const token = localStorage.getItem('token');
                 if (!token) throw new Error('You must be logged in');
 
-                // Backend route is GET /stores/owner (no ownerId in URL)
                 const res = await axios.get(`${API_BASE}/stores/owner`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                // res.data should be an array; pick the first store
                 if (!Array.isArray(res.data) || res.data.length === 0) {
                     throw new Error('No store assigned to this owner');
                 }
@@ -52,31 +86,30 @@ export default function MembersManagement() {
     const token = localStorage.getItem('token');
     const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
 
-    const handleInput = (e) =>
+    const handleInput = (e) => {
         setNewMember({ ...newMember, [e.target.name]: e.target.value });
+    };
 
     const handleCreateMember = async () => {
         const { name, email, password } = newMember;
         if (!name || !email || !password) {
-            return alert('Name, email & password are required');
+            alert('Name, email & password are required');
+            return;
         }
 
         setCreating(true);
         try {
-            // 1) Create the user with role "store_member"
             const { data: user } = await createUser(
                 { name, email, password, role: 'store_member' },
                 token
             );
 
-            // 2) Add them to this store
             await axios.post(
                 `${API_BASE}/stores/${store._id}/members`,
                 { userId: user._id },
                 { headers: authHeader }
             );
 
-            // 3) Update UI
             setMembers((prev) => [...prev, user]);
             setNewMember({ name: '', email: '', password: '' });
         } catch (err) {
@@ -105,59 +138,107 @@ export default function MembersManagement() {
         }
     };
 
-    if (loading) return <p>Loading…</p>;
-    if (error) return <p style={{ color: 'red' }}>{error}</p>;
+    if (loading) return (
+        <Box display="flex" justifyContent="center">
+            <CircularProgress />
+        </Box>
+    );
+
+    if (error) return <Typography color="error">{error}</Typography>;
     if (!store) return null;
 
     return (
-        <div>
-            <h2>Manage Members for “{store.name}”</h2>
+        <Box>
+            <Typography variant="h5" sx={{
+                mb: 3,
+                fontWeight: 600,
+                pb: 1,
+                borderBottom: '2px solid',
+                borderColor: 'divider'
+            }}>
+                Manage Members for "{store.name}"
+            </Typography>
 
-            <section>
-                <h3>Current Members</h3>
+            <MemberCard>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
+                    Current Members
+                </Typography>
+
                 {members.length === 0 ? (
-                    <p>No members yet.</p>
+                    <Typography variant="body1" color="text.secondary">
+                        No members yet.
+                    </Typography>
                 ) : (
-                    <ul>
+                    <List disablePadding>
                         {members.map((m) => (
-                            <li key={m._id}>
-                                {m.name} ({m.email}){' '}
-                                <button onClick={() => handleRemoveMember(m._id)}>
+                            <MemberListItem key={m._id}>
+                                <ListItemText
+                                    primary={m.name}
+                                    secondary={m.email}
+                                    primaryTypographyProps={{ fontWeight: 500 }}
+                                />
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    size="small"
+                                    onClick={() => handleRemoveMember(m._id)}
+                                    sx={{ textTransform: 'none' }}
+                                >
                                     Remove
-                                </button>
-                            </li>
+                                </Button>
+                            </MemberListItem>
                         ))}
-                    </ul>
+                    </List>
                 )}
-            </section>
+            </MemberCard>
 
-            <section>
-                <h3>Add New Member</h3>
-                <input
-                    type="text"
-                    name="name"
-                    placeholder="Name"
-                    value={newMember.name}
-                    onChange={handleInput}
-                />
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    value={newMember.email}
-                    onChange={handleInput}
-                />
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                    value={newMember.password}
-                    onChange={handleInput}
-                />
-                <button onClick={handleCreateMember} disabled={creating}>
-                    {creating ? 'Creating…' : 'Create & Add Member'}
-                </button>
-            </section>
-        </div>
+            <MemberCard>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
+                    Add New Member
+                </Typography>
+                <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <FormInput
+                        label="Name"
+                        name="name"
+                        value={newMember.name}
+                        onChange={handleInput}
+                        fullWidth
+                        variant="outlined"
+                    />
+                    <FormInput
+                        label="Email"
+                        name="email"
+                        type="email"
+                        value={newMember.email}
+                        onChange={handleInput}
+                        fullWidth
+                        variant="outlined"
+                    />
+                    <FormInput
+                        label="Password"
+                        name="password"
+                        type="password"
+                        value={newMember.password}
+                        onChange={handleInput}
+                        fullWidth
+                        variant="outlined"
+                    />
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleCreateMember}
+                        disabled={creating}
+                        sx={{
+                            alignSelf: 'flex-start',
+                            textTransform: 'none',
+                            px: 3,
+                            py: 1
+                        }}
+                    >
+                        {creating ? 'Creating...' : 'Create & Add Member'}
+                    </Button>
+                </Box>
+            </MemberCard>
+        </Box>
     );
 }

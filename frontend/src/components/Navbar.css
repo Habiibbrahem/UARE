@@ -19,10 +19,10 @@
     --radius-md: 8px;
     --radius-lg: 12px;
     --z-index-navbar: 1000;
-    --z-index-mega-menu: 999;
+    --z-index-mega-menu: 1000;
+    /* Increased to be above sidebar */
     --z-index-modal: 2000;
     --z-index-sidebar: 950;
-    /* Adjusted z-index for sidebar */
 }
 
 * {
@@ -68,7 +68,6 @@
     margin: 0 auto;
     position: relative;
     z-index: var(--z-index-navbar);
-    /* Ensure navbar is above sidebar */
 }
 
 .navbar-left {
@@ -164,7 +163,6 @@
     background: none;
     border: none;
     font-size: 0.85rem;
-    /* Reduced font size for categories */
     font-weight: 600;
     color: var(--text-dark);
     text-transform: uppercase;

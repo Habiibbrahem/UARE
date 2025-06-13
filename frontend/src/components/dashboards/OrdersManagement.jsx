@@ -1,5 +1,3 @@
-// src/components/dashboards/OrdersManagement.jsx
-
 import React, { useEffect, useState } from 'react';
 import {
     Box,
@@ -21,6 +19,8 @@ import {
     Paper,
     Snackbar,
     Alert,
+    Card,
+    styled
 } from '@mui/material';
 import {
     getStoreByOwner,
@@ -30,16 +30,36 @@ import {
     cancelOrder,
 } from '../../services/storeOwnerService';
 
-// Order statuses
-const ORDER_STATUS_OPTIONS = [
-    'pending',
-    'processing',
-    'shipped',
-    'delivered',
-    'cancelled',
-];
+const ORDER_STATUS_OPTIONS = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
-// Helper to decode JWT payload
+const StatusSelect = styled(Select)(({ theme }) => ({
+    '& .MuiSelect-select': {
+        padding: '8px 32px 8px 12px !important',
+        borderRadius: theme.shape.borderRadius,
+    },
+}));
+
+const ActionButton = styled(Button)(({ theme }) => ({
+    textTransform: 'none',
+    borderRadius: theme.shape.borderRadius,
+    padding: '8px 16px',
+    fontWeight: 500,
+    marginRight: theme.spacing(1),
+}));
+
+const ContentCard = styled(Card)(({ theme }) => ({
+    padding: theme.spacing(3),
+    borderRadius: theme.shape.borderRadius * 2,
+    boxShadow: theme.shadows[2],
+    marginBottom: theme.spacing(3),
+    backgroundColor: theme.palette.background.paper,
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    fontWeight: 600,
+    backgroundColor: theme.palette.grey[100],
+}));
+
 function decodeToken(token) {
     try {
         const base64Payload = token.split('.')[1];
@@ -66,7 +86,6 @@ export default function OrdersManagement() {
         severity: 'success',
     });
 
-    // ──────── fetch the owner’s store ID once on mount ────────
     useEffect(() => {
         const token = localStorage.getItem('token');
         const user = decodeToken(token);
@@ -88,7 +107,6 @@ export default function OrdersManagement() {
             });
     }, []);
 
-    // ──────── once storeId is known, fetch orders ────────
     useEffect(() => {
         if (storeId) {
             fetchOrders();
@@ -151,92 +169,104 @@ export default function OrdersManagement() {
 
     return (
         <Box>
-            <Typography variant="h5" gutterBottom>
+            <Typography variant="h5" sx={{
+                mb: 3,
+                fontWeight: 600,
+                pb: 1,
+                borderBottom: '2px solid',
+                borderColor: 'divider'
+            }}>
                 Manage Orders
             </Typography>
 
-            {loading ? (
-                <CircularProgress />
-            ) : error ? (
-                <Typography color="error">{error}</Typography>
-            ) : (
-                <TableContainer component={Paper}>
-                    <Table size="small" aria-label="orders table">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Order Number</TableCell>
-                                <TableCell>Customer ID</TableCell>
-                                <TableCell>Address</TableCell>          {/* ← NEW */}
-                                <TableCell>Phone</TableCell>            {/* ← NEW */}
-                                <TableCell>Status</TableCell>
-                                <TableCell>Payment Method</TableCell>
-                                <TableCell>Total</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {orders.length === 0 ? (
+            <ContentCard>
+                {loading ? (
+                    <Box display="flex" justifyContent="center">
+                        <CircularProgress />
+                    </Box>
+                ) : error ? (
+                    <Typography color="error">{error}</Typography>
+                ) : (
+                    <TableContainer component={Paper} sx={{ mt: 2 }}>
+                        <Table size="small" aria-label="orders table">
+                            <TableHead>
                                 <TableRow>
-                                    <TableCell colSpan={8} align="center">
-                                        No orders found.
-                                    </TableCell>
+                                    <StyledTableCell>Order Number</StyledTableCell>
+                                    <StyledTableCell>Customer ID</StyledTableCell>
+                                    <StyledTableCell>Address</StyledTableCell>
+                                    <StyledTableCell>Phone</StyledTableCell>
+                                    <StyledTableCell>Status</StyledTableCell>
+                                    <StyledTableCell>Payment Method</StyledTableCell>
+                                    <StyledTableCell>Total</StyledTableCell>
+                                    <StyledTableCell>Actions</StyledTableCell>
                                 </TableRow>
-                            ) : (
-                                orders.map((order) => (
-                                    <TableRow key={order._id}>
-                                        <TableCell>{order.orderNumber}</TableCell>
-                                        <TableCell>{order.customerId}</TableCell>
-                                        <TableCell>{order.shippingAddress}</TableCell>   {/* ← show address */}
-                                        <TableCell>{order.phoneNumber}</TableCell>       {/* ← show phone */}
-                                        <TableCell>
-                                            <Select
-                                                value={order.status}
-                                                onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                                disabled={
-                                                    actionLoading ||
-                                                    order.status === 'cancelled' ||
-                                                    order.status === 'delivered'
-                                                }
-                                                size="small"
-                                            >
-                                                {ORDER_STATUS_OPTIONS.map((status) => (
-                                                    <MenuItem key={status} value={status}>
-                                                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </TableCell>
-                                        <TableCell>{order.paymentMethod}</TableCell>
-                                        <TableCell>${order.totalAmount.toFixed(2)}</TableCell>
-                                        <TableCell>
-                                            <Button
-                                                variant="outlined"
-                                                size="small"
-                                                disabled={actionLoading || order.status !== 'shipped'}
-                                                onClick={() => handleConfirmDelivery(order._id)}
-                                                sx={{ mr: 1 }}
-                                            >
-                                                Confirm Delivery
-                                            </Button>
-                                            <Button
-                                                variant="outlined"
-                                                size="small"
-                                                color="error"
-                                                disabled={
-                                                    actionLoading || !['pending', 'processing'].includes(order.status)
-                                                }
-                                                onClick={() => handleCancelOrder(order._id)}
-                                            >
-                                                Cancel
-                                            </Button>
+                            </TableHead>
+                            <TableBody>
+                                {orders.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} align="center">
+                                            No orders found.
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
+                                ) : (
+                                    orders.map((order) => (
+                                        <TableRow
+                                            key={order._id}
+                                            hover
+                                            sx={{ '&:hover': { backgroundColor: 'action.hover' } }}
+                                        >
+                                            <TableCell>{order.orderNumber}</TableCell>
+                                            <TableCell>{order.customerId}</TableCell>
+                                            <TableCell>{order.shippingAddress}</TableCell>
+                                            <TableCell>{order.phoneNumber}</TableCell>
+                                            <TableCell>
+                                                <StatusSelect
+                                                    value={order.status}
+                                                    onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                                                    disabled={
+                                                        actionLoading ||
+                                                        order.status === 'cancelled' ||
+                                                        order.status === 'delivered'
+                                                    }
+                                                    size="small"
+                                                >
+                                                    {ORDER_STATUS_OPTIONS.map((status) => (
+                                                        <MenuItem key={status} value={status}>
+                                                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                                                        </MenuItem>
+                                                    ))}
+                                                </StatusSelect>
+                                            </TableCell>
+                                            <TableCell>{order.paymentMethod}</TableCell>
+                                            <TableCell>${order.totalAmount.toFixed(2)}</TableCell>
+                                            <TableCell>
+                                                <ActionButton
+                                                    variant="contained"
+                                                    color="primary"
+                                                    disabled={actionLoading || order.status !== 'shipped'}
+                                                    onClick={() => handleConfirmDelivery(order._id)}
+                                                >
+                                                    Confirm Delivery
+                                                </ActionButton>
+                                                <ActionButton
+                                                    variant="outlined"
+                                                    color="error"
+                                                    disabled={
+                                                        actionLoading || !['pending', 'processing'].includes(order.status)
+                                                    }
+                                                    onClick={() => handleCancelOrder(order._id)}
+                                                >
+                                                    Cancel
+                                                </ActionButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+            </ContentCard>
 
             <Dialog open={confirmDialog.open} onClose={handleConfirmDialogClose}>
                 <DialogTitle>
@@ -249,17 +279,21 @@ export default function OrdersManagement() {
                         : 'cancel this order?'}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleConfirmDialogClose} disabled={actionLoading}>
+                    <ActionButton
+                        onClick={handleConfirmDialogClose}
+                        disabled={actionLoading}
+                        variant="outlined"
+                    >
                         Cancel
-                    </Button>
-                    <Button
+                    </ActionButton>
+                    <ActionButton
                         onClick={handleConfirmDialogSubmit}
                         disabled={actionLoading}
                         variant="contained"
                         color="primary"
                     >
                         Yes
-                    </Button>
+                    </ActionButton>
                 </DialogActions>
             </Dialog>
 

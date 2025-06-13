@@ -9,7 +9,7 @@ import CartIcon from './CartIcon';
 
 const API_BASE = 'http://localhost:3000';
 
-const Navbar = () => {
+const Navbar = ({ isAdmin = false }) => {
     const [categories, setCategories] = useState([]);
     const [categoryTree, setCategoryTree] = useState([]);
     const [stores, setStores] = useState([]);
