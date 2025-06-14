@@ -8,7 +8,6 @@ import {
     Button,
     Box,
     IconButton,
-    Badge,
     Chip
 } from '@mui/material';
 import { Favorite, ShoppingCart } from '@mui/icons-material';
@@ -33,16 +32,18 @@ export default function ProductCard({ product, store }) {
     };
 
     return (
-        <Card sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            transition: 'transform 0.2s',
-            '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-            }
-        }}>
+        <Card
+            sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }
+            }}
+        >
             <Box sx={{ position: 'relative' }}>
                 <CardMedia
                     component="img"
@@ -57,52 +58,62 @@ export default function ProductCard({ product, store }) {
                         top: 8,
                         right: 8,
                         backgroundColor: 'rgba(255,255,255,0.8)',
-                        '&:hover': {
-                            backgroundColor: 'rgba(255,255,255,0.9)'
-                        }
+                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.9)' }
                     }}
                     onClick={() => setIsFavorite(!isFavorite)}
                 >
                     <Favorite color={isFavorite ? 'error' : 'action'} />
                 </IconButton>
+
                 {product.discount && (
                     <Chip
                         label={`-${product.discount}%`}
                         color="error"
                         size="small"
-                        sx={{
-                            position: 'absolute',
-                            top: 8,
-                            left: 8
-                        }}
+                        sx={{ position: 'absolute', top: 8, left: 8 }}
+                    />
+                )}
+
+                {/* Out of Stock badge */}
+                {product.quantity !== undefined && product.quantity <= 0 && (
+                    <Chip
+                        label="Out of Stock"
+                        color="error"
+                        size="small"
+                        sx={{ position: 'absolute', bottom: 8, left: 8 }}
                     />
                 )}
             </Box>
 
             <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h6" component="div" noWrap>
+                <Typography gutterBottom variant="h6" noWrap>
                     {product.name}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    mb: 1
-                }}>
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        mb: 1
+                    }}
+                >
                     {product.description}
                 </Typography>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                     <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
-                        ${product.price.toFixed(2)}
+                        {`${product.price.toFixed(2)} TND`}
                     </Typography>
                     {product.originalPrice && (
-                        <Typography variant="body2" color="text.disabled" sx={{
-                            textDecoration: 'line-through',
-                            ml: 1
-                        }}>
-                            ${product.originalPrice.toFixed(2)}
+                        <Typography
+                            variant="body2"
+                            color="text.disabled"
+                            sx={{ textDecoration: 'line-through', ml: 1 }}
+                        >
+                            {`${product.originalPrice.toFixed(2)} TND`}
                         </Typography>
                     )}
                 </Box>
@@ -121,6 +132,7 @@ export default function ProductCard({ product, store }) {
                     size="small"
                     color="primary"
                     onClick={handleAddToCart}
+                    disabled={product.quantity !== undefined && product.quantity <= 0}
                     sx={{ ml: 'auto' }}
                 >
                     <ShoppingCart />

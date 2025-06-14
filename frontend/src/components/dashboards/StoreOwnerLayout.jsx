@@ -1,93 +1,116 @@
-// src/components/dashboards/StoreMemberLayout.jsx
+// src/components/dashboards/StoreOwnerLayout.jsx
 import React, { useState } from 'react';
+import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
-    Box,
-    Drawer,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
-    Toolbar,
-    Typography,
-    useTheme,
-    useMediaQuery,
+    Box, Drawer, Toolbar, List, ListItem,
+    ListItemButton, ListItemIcon, ListItemText,
+    Typography, IconButton
 } from '@mui/material';
-import '../../styles/dashboard.css';
+import {
+    People as MembersIcon,
+    ListAlt as OrdersIcon,
+    Menu as MenuIcon,
+    MenuOpen as MenuOpenIcon
+} from '@mui/icons-material';
+import Navbar from '../Navbar';
 
 const drawerWidth = 240;
+const menuItems = [
+    { key: 'members', label: 'Manage Members', path: '/store-owner/members', icon: <MembersIcon /> },
+    { key: 'orders', label: 'Manage Orders', path: '/store-owner/orders', icon: <OrdersIcon /> },
+];
 
-export default function StoreMemberLayout({ children }) {
-    const [selectedIndex, setSelectedIndex] = useState(0);
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+export default function StoreOwnerLayout() {
+    const { pathname } = useLocation();
+    const [open, setOpen] = useState(true);
 
-    const menuItems = [
-        { label: 'Manage Categories', key: 'categories' },
-        { label: 'Manage Products', key: 'products' },
-    ];
+    // determine which menu item is active
+    const idx = menuItems.findIndex(item => pathname.startsWith(item.path));
+    const selectedKey = idx >= 0 ? menuItems[idx].key : menuItems[0].key;
 
     return (
-        <Box className="dashboard-container">
+        <Box sx={{ display: 'flex' }}>
+            {/* Top Navbar */}
+            <Navbar sx={{ zIndex: 1200 }} />
+
+            {/* Sidebar */}
             <Drawer
                 variant="permanent"
                 sx={{
-                    width: drawerWidth,
+                    width: open ? drawerWidth : 72,
                     flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: {
-                        width: drawerWidth,
+                    '& .MuiDrawer-paper': {
+                        width: open ? drawerWidth : 72,
                         boxSizing: 'border-box',
-                        position: 'fixed',
-                        backgroundColor: theme.palette.primary.main,
-                        color: theme.palette.primary.contrastText,
-                        top: '106px',
-                        height: 'calc(100vh - 106px)',
-                        [theme.breakpoints.down('md')]: {
-                            top: '92px',
-                            height: 'calc(100vh - 92px)',
-                        }
+                        mt: '64px',                        // push below Navbar
+                        height: 'calc(100vh - 64px)',
+                        bgcolor: 'grey.900',
+                        color: 'white',
+                        transition: 'width 0.3s',
                     },
                 }}
-                className="dashboard-sidebar"
             >
-                <Toolbar className="dashboard-sidebar-header">
-                    <Typography variant="h6" noWrap component="div">
-                        Store Member Panel
-                    </Typography>
+                <Toolbar
+                    sx={{
+                        justifyContent: 'space-between',
+                        bgcolor: 'grey.800',
+                        px: 2
+                    }}
+                >
+                    {open && <Typography variant="h6">Store Owner</Typography>}
+                    <IconButton onClick={() => setOpen(!open)} sx={{ color: 'white' }}>
+                        {open ? <MenuOpenIcon /> : <MenuIcon />}
+                    </IconButton>
                 </Toolbar>
-                <List className="dashboard-menu">
-                    {menuItems.map((item, idx) => (
-                        <ListItem
-                            key={item.key}
-                            disablePadding
-                            selected={selectedIndex === idx}
-                            onClick={() => setSelectedIndex(idx)}
-                            className={`dashboard-menu-item ${selectedIndex === idx ? 'selected' : ''}`}
-                        >
-                            <ListItemButton className="dashboard-menu-button">
-                                <ListItemText
-                                    primary={item.label}
-                                    primaryTypographyProps={{
-                                        color: 'inherit',
-                                        fontWeight: selectedIndex === idx ? '600' : '400'
-                                    }}
-                                />
+
+                <List>
+                    {menuItems.map(item => (
+                        <ListItem key={item.key} disablePadding>
+                            <ListItemButton
+                                component={Link}
+                                to={item.path}
+                                selected={item.key === selectedKey}
+                                sx={{
+                                    justifyContent: open ? 'initial' : 'center',
+                                    px: open ? 2.5 : 1,
+                                    '&.Mui-selected': { bgcolor: 'grey.700' },
+                                    '&:hover': { bgcolor: 'grey.700' },
+                                }}
+                            >
+                                <ListItemIcon sx={{ color: 'white', minWidth: open ? 56 : 40 }}>
+                                    {item.icon}
+                                </ListItemIcon>
+                                {open && <ListItemText primary={item.label} sx={{ color: 'white' }} />}
                             </ListItemButton>
                         </ListItem>
                     ))}
                 </List>
             </Drawer>
 
+            {/* Main Content */}
             <Box
                 component="main"
-                className="dashboard-main-content"
                 sx={{
-                    marginLeft: isMobile ? 0 : `${drawerWidth}px`,
-                    width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`,
+                    flexGrow: 1,
+                    ml: open ? `${drawerWidth}px` : '72px',
+                    mt: '64px',
+                    p: 3,
+                    bgcolor: 'grey.100',
+                    transition: 'margin-left 0.3s',
                 }}
             >
-                {typeof children === 'function'
-                    ? children(menuItems[selectedIndex].key)
-                    : children}
+                <Box
+                    sx={{
+                        bgcolor: 'white',
+                        p: 3,
+                        borderRadius: 2,
+                        boxShadow: 3,
+                        minHeight: 'calc(100vh - 100px)',
+                    }}
+                >
+                    {/* This is where <Route path="members|orders"> will render */}
+                    <Outlet />
+                </Box>
             </Box>
         </Box>
     );

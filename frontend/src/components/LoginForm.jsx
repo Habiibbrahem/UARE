@@ -47,13 +47,19 @@ const LoginForm = () => {
         <div className="auth-container">
             <div className="auth-image-section">
                 <div className="auth-image-content">
-                    <h1 className="auth-image-title">Welcome Back</h1>
+                    <h1 className="auth-image-title">Welcome Back To UARE COLLECTION</h1>
                     <p className="auth-image-subtitle">
-                        Login to access your personalized dashboard and continue your journey with us.
+                        🔑 Login to Your Account
+                        <br />
+
+                        Track orders & manage purchases
+                        <br />
+                        Save favorites for later
+                        <br />
+                        Enjoy personalized recommendations
                     </p>
                     <p className="auth-image-tagline">
-                        Capturing Moments, Creating Memories
-                    </p>
+                        "Every purchase tells your story"                   </p>
                 </div>
             </div>
 

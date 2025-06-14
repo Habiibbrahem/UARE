@@ -101,10 +101,7 @@ export default function ProductsManagement() {
             return memo[id];
         };
 
-        categories.forEach(cat => {
-            buildPath(cat._id);
-        });
-
+        categories.forEach(cat => buildPath(cat._id));
         return memo;
     };
 
@@ -237,7 +234,7 @@ export default function ProductsManagement() {
                                             />
                                             : '-'}
                                     </TableCell>
-                                    <TableCell>${p.price.toFixed(2)}</TableCell>
+                                    <TableCell>{`${p.price.toFixed(2)} TND`}</TableCell>
                                     <TableCell>{p.quantity}</TableCell>
                                     <TableCell>{breadcrumbs[p.categoryId?._id || p.categoryId] || '-'}</TableCell>
                                     <TableCell align="right">

@@ -238,7 +238,7 @@ export default function OrdersManagement() {
                                                 </StatusSelect>
                                             </TableCell>
                                             <TableCell>{order.paymentMethod}</TableCell>
-                                            <TableCell>${order.totalAmount.toFixed(2)}</TableCell>
+                                            <TableCell>{`${order.totalAmount.toFixed(2)} TND`}</TableCell>
                                             <TableCell>
                                                 <ActionButton
                                                     variant="contained"

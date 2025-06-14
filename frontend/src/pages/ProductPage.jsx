@@ -31,13 +31,11 @@ import { getProductById } from '../services/productService';
 import useCartStore from '../store/useCartStore';
 
 // ─── Styled Components ──────────────────────────────────────────────────────────
-
 const PageContainer = styled(Box)(({ theme }) => ({
-    paddingTop: theme.spacing(12), // Proper spacing below navbar
+    paddingTop: theme.spacing(12),
     paddingBottom: theme.spacing(6),
     backgroundColor: theme.palette.background.default,
 }));
-
 const ProductContainer = styled(Box)(({ theme }) => ({
     maxWidth: 1400,
     margin: '0 auto',
@@ -46,52 +44,39 @@ const ProductContainer = styled(Box)(({ theme }) => ({
     borderRadius: theme.shape.borderRadius * 2,
     boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
 }));
-
 const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
     marginBottom: theme.spacing(3),
     '& a': {
         textDecoration: 'none',
         color: theme.palette.primary.main,
-        '&:hover': {
-            textDecoration: 'underline',
-        },
+        '&:hover': { textDecoration: 'underline' },
     },
 }));
-
 const ProductGrid = styled('div')(({ theme }) => ({
     display: 'grid',
     gridTemplateColumns: '1.2fr 1fr',
     gap: theme.spacing(6),
-    [theme.breakpoints.down('lg')]: {
-        gridTemplateColumns: '1fr',
-        gap: theme.spacing(4),
-    },
+    [theme.breakpoints.down('lg')]: { gridTemplateColumns: '1fr', gap: theme.spacing(4) },
 }));
-
 const ImageCard = styled(Card)(({ theme }) => ({
     borderRadius: theme.shape.borderRadius * 3,
     boxShadow: 'none',
     border: `1px solid ${theme.palette.divider}`,
     overflow: 'hidden',
     transition: 'transform 0.3s ease',
-    '&:hover': {
-        transform: 'scale(1.02)',
-    },
+    '&:hover': { transform: 'scale(1.02)' },
 }));
-
 const ProductImage = styled(CardMedia)(() => ({
-    objectFit: 'contain',
     width: '100%',
     height: 500,
+    objectFit: 'contain',
     backgroundColor: '#f9f9f9',
 }));
-
 const ThumbnailContainer = styled(Box)(({ theme }) => ({
     display: 'flex',
     gap: theme.spacing(2),
     marginTop: theme.spacing(2),
 }));
-
 const Thumbnail = styled('img')(({ theme, selected }) => ({
     width: 60,
     height: 60,
@@ -101,27 +86,20 @@ const Thumbnail = styled('img')(({ theme, selected }) => ({
     border: selected ? `2px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
     opacity: selected ? 1 : 0.7,
     transition: 'all 0.2s ease',
-    '&:hover': {
-        opacity: 1,
-    },
+    '&:hover': { opacity: 1 },
 }));
-
 const DetailSection = styled(Box)(({ theme }) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: theme.spacing(3),
 }));
-
 const ProductTitle = styled(Typography)(({ theme }) => ({
     fontWeight: 700,
     lineHeight: 1.2,
     marginBottom: theme.spacing(2),
     fontSize: '2rem',
-    [theme.breakpoints.down('sm')]: {
-        fontSize: '1.5rem',
-    },
+    [theme.breakpoints.down('sm')]: { fontSize: '1.5rem' },
 }));
-
 const SectionTitle = styled(Typography)(({ theme }) => ({
     fontWeight: 600,
     color: theme.palette.text.secondary,
@@ -130,25 +108,21 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
     letterSpacing: 1,
     fontSize: '0.85rem',
 }));
-
 const ProductDescription = styled(Typography)(({ theme }) => ({
     color: theme.palette.text.secondary,
     lineHeight: 1.7,
     marginBottom: theme.spacing(3),
 }));
-
 const PriceBox = styled(Box)(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(1.5),
     marginBottom: theme.spacing(1),
 }));
-
 const OriginalPrice = styled(Typography)(({ theme }) => ({
     textDecoration: 'line-through',
     color: theme.palette.text.disabled,
 }));
-
 const VariantSection = styled(Box)(({ theme }) => ({
     marginBottom: theme.spacing(3),
     '& .MuiChip-root': {
@@ -159,23 +133,13 @@ const VariantSection = styled(Box)(({ theme }) => ({
         marginRight: theme.spacing(1),
         marginBottom: theme.spacing(1),
     },
-    '& .MuiChip-root:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: theme.shadows[1],
-    },
-    '& .MuiChip-filled': {
-        backgroundColor: theme.palette.primary.main,
-        color: theme.palette.primary.contrastText,
-    },
+    '& .MuiChip-root:hover': { transform: 'translateY(-2px)', boxShadow: theme.shadows[1] },
+    '& .MuiChip-filled': { backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText },
 }));
-
 const QuantityField = styled(TextField)(({ theme }) => ({
     maxWidth: 100,
-    '& .MuiOutlinedInput-root': {
-        borderRadius: theme.shape.borderRadius * 2,
-    },
+    '& .MuiOutlinedInput-root': { borderRadius: theme.shape.borderRadius * 2 },
 }));
-
 const ActionsBox = styled(Box)(({ theme }) => ({
     display: 'flex',
     gap: theme.spacing(2),
@@ -188,21 +152,13 @@ const ActionsBox = styled(Box)(({ theme }) => ({
         fontWeight: 600,
         letterSpacing: 0.5,
         boxShadow: 'none',
-        '&:hover': {
-            boxShadow: theme.shadows[2],
-            transform: 'translateY(-2px)',
-        },
-        '&:active': {
-            transform: 'translateY(0)',
-        },
+        '&:hover': { boxShadow: theme.shadows[2], transform: 'translateY(-2px)' },
+        '&:active': { transform: 'translateY(0)' },
     },
     '& .MuiIconButton-root': {
         border: `1px solid ${theme.palette.divider}`,
         transition: 'all 0.2s ease',
-        '&:hover': {
-            backgroundColor: theme.palette.action.hover,
-            transform: 'scale(1.1)',
-        },
+        '&:hover': { backgroundColor: theme.palette.action.hover, transform: 'scale(1.1)' },
     },
 }));
 
@@ -228,69 +184,45 @@ export default function ProductPage() {
                 if (res.data.colors?.length) setSelectedColor(res.data.colors[0]);
                 if (res.data.sizes?.length) setSelectedSize(res.data.sizes[0]);
             })
-            .catch((err) => {
-                setError(err.message || 'Failed to load product');
-            })
+            .catch((err) => setError(err.message || 'Failed to load product'))
             .finally(() => setLoading(false));
     }, [productId]);
 
-    if (loading) {
-        return (
-            <PageContainer>
-                <ProductContainer>
-                    <Skeleton variant="rectangular" width="100%" height={500} />
-                    <Box mt={4}>
-                        <Skeleton variant="text" width="60%" height={60} />
-                        <Skeleton variant="text" width="30%" height={40} />
-                        <Box display="flex" gap={2} my={2}>
-                            <Skeleton variant="circular" width={40} height={40} />
-                            <Skeleton variant="circular" width={40} height={40} />
-                            <Skeleton variant="circular" width={40} height={40} />
-                        </Box>
-                        <Skeleton variant="text" width="80%" height={100} />
-                        <Skeleton variant="rectangular" width={200} height={50} sx={{ mt: 3 }} />
-                    </Box>
-                </ProductContainer>
-            </PageContainer>
-        );
-    }
+    if (loading) return (
+        <PageContainer>
+            <ProductContainer>
+                <Skeleton variant="rectangular" width="100%" height={500} />
+                {/* ...more skeletons */}
+            </ProductContainer>
+        </PageContainer>
+    );
 
-    if (error) {
-        return (
-            <PageContainer>
-                <Box display="flex" justifyContent="center" mt={4}>
-                    <Alert severity="error" sx={{ maxWidth: 600 }}>
-                        {error}
-                    </Alert>
-                </Box>
-            </PageContainer>
-        );
-    }
+    if (error) return (
+        <PageContainer>
+            <Alert severity="error" sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
+                {error}
+            </Alert>
+        </PageContainer>
+    );
 
-    if (!product) {
-        return (
-            <PageContainer>
-                <Box display="flex" justifyContent="center" mt={4}>
-                    <Alert severity="warning" sx={{ maxWidth: 600 }}>
-                        Product not found
-                    </Alert>
-                </Box>
-            </PageContainer>
-        );
-    }
+    if (!product) return (
+        <PageContainer>
+            <Alert severity="warning" sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
+                Product not found
+            </Alert>
+        </PageContainer>
+    );
 
-    const handleAddToCart = () => {
-        addToCart({
-            productId: product._id,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            quantity: Number(quantity),
-            color: selectedColor,
-            size: selectedSize,
-            storeId: product.storeId,
-        });
-    };
+    const handleAddToCart = () => addToCart({
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: Number(quantity),
+        color: selectedColor,
+        size: selectedSize,
+        storeId: product.storeId,
+    });
 
     const images = [product.image, ...(product.additionalImages || [])];
 
@@ -314,13 +246,12 @@ export default function ProductPage() {
                         </ImageCard>
                         {images.length > 1 && (
                             <ThumbnailContainer>
-                                {images.map((img, index) => (
+                                {images.map((img, i) => (
                                     <Thumbnail
-                                        key={index}
+                                        key={i}
                                         src={`${axiosInstance.defaults.baseURL}${img}`}
-                                        onClick={() => setMainImage(img)}
                                         selected={mainImage === img}
-                                        alt={`Thumbnail ${index + 1}`}
+                                        onClick={() => setMainImage(img)}
                                     />
                                 ))}
                             </ThumbnailContainer>
@@ -340,22 +271,22 @@ export default function ProductPage() {
                         {product.discount ? (
                             <PriceBox>
                                 <Typography variant="h4" color="primary">
-                                    ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                                    {`${(product.price * (1 - product.discount / 100)).toFixed(2)} TND`}
                                 </Typography>
                                 <OriginalPrice variant="body1">
-                                    ${product.price.toFixed(2)}
+                                    {`${product.price.toFixed(2)} TND`}
                                 </OriginalPrice>
                                 <Chip label={`${product.discount}% OFF`} color="error" size="small" />
                             </PriceBox>
                         ) : (
                             <Typography variant="h4" color="primary">
-                                ${product.price.toFixed(2)}
+                                {`${product.price.toFixed(2)} TND`}
                             </Typography>
                         )}
 
-                        {product.stock > 0 ? (
+                        {product.quantity > 0 ? (
                             <Typography variant="body2" color="success.main">
-                                In Stock ({product.stock} available)
+                                In Stock ({product.quantity} available)
                             </Typography>
                         ) : (
                             <Typography variant="body2" color="error">
@@ -372,7 +303,7 @@ export default function ProductPage() {
                             <VariantSection>
                                 <SectionTitle>Color</SectionTitle>
                                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                    {product.colors.map((c) => (
+                                    {product.colors.map(c => (
                                         <Chip
                                             key={c}
                                             label={c}
@@ -389,7 +320,7 @@ export default function ProductPage() {
                             <VariantSection>
                                 <SectionTitle>Size</SectionTitle>
                                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                    {product.sizes.map((s) => (
+                                    {product.sizes.map(s => (
                                         <Chip
                                             key={s}
                                             label={s}
@@ -407,7 +338,7 @@ export default function ProductPage() {
                             <QuantityField
                                 type="number"
                                 value={quantity}
-                                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                                onChange={e => setQuantity(Math.max(1, Number(e.target.value)))}
                                 inputProps={{ min: 1 }}
                                 variant="outlined"
                                 size="small"
@@ -420,7 +351,7 @@ export default function ProductPage() {
                                 size="large"
                                 startIcon={<ShoppingCart />}
                                 onClick={handleAddToCart}
-                                disabled={product.stock <= 0}
+                                disabled={product.quantity <= 0}
                             >
                                 Add to Cart
                             </Button>
@@ -437,7 +368,9 @@ export default function ProductPage() {
                                 <Typography fontWeight="500">Product Details</Typography>
                             </AccordionSummary>
                             <AccordionDetails>
-                                <Typography paragraph>{product.longDescription || 'No additional details available.'}</Typography>
+                                <Typography paragraph>
+                                    {product.longDescription || 'No additional details available.'}
+                                </Typography>
                                 {product.specifications?.length > 0 && (
                                     <>
                                         <Divider sx={{ my: 2 }} />

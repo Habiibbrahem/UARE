@@ -13,22 +13,34 @@
 
 /* === Cart Page Styles === */
 .cart-container {
-    padding: calc(var(--spacing) * 2);
-    max-width: 1200px;
+    /* full viewport height minus navbar, center contents */
+    min-height: calc(100vh - 64px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     margin: 0 auto;
+    padding: calc(var(--spacing) * 2);
+    max-width: 1400px;
+    /* allow cards to grow wider */
     background-color: var(--bg-color);
 }
 
 .cart-title {
-    font-size: 2rem;
-    margin-bottom: calc(var(--spacing) * 1.5);
+    font-size: 2.5rem;
+    /* larger headline */
+    margin-bottom: calc(var(--spacing) * 2);
     color: var(--primary-color);
     font-weight: 700;
+    text-align: left;
+    /* align left */
+    padding-left: var(--spacing);
+    /* match grid padding */
 }
 
 .cart-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 3fr 1fr;
+    /* bigger main column */
     gap: calc(var(--spacing) * 2);
 }
 
@@ -41,8 +53,9 @@
 }
 
 .cart-item-image {
-    width: 120px;
-    height: 120px;
+    width: 140px;
+    /* slightly larger image */
+    height: 140px;
     object-fit: cover;
 }
 
@@ -70,6 +83,7 @@
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
+    margin-top: var(--spacing);
 }
 
 .cart-summary-button:hover {

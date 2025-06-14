@@ -71,10 +71,15 @@ const SignupForm = () => {
                 <div className="auth-image-content">
                     <h1 className="auth-image-title">Join Us</h1>
                     <p className="auth-image-subtitle">
-                        Create an account to unlock all features and start your journey with us.
-                    </p>
+                        🌟 Join Our Community
+                        <br />Create your free account to:
+                        <br />✓ Get personalized recommendations
+                        <br />✓ Save your wishlists & order history
+                        ✓ Enjoy faster checkout & exclusive deals                      </p>
                     <p className="auth-image-tagline">
-                        Capturing Moments, Creating Memories
+                        "Your perfect finds are just an account away"
+
+
                     </p>
                 </div>
             </div>
