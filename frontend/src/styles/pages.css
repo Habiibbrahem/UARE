@@ -1,0 +1,122 @@
+/* src/styles/pages.css */
+
+/* === Theme Variables === */
+:root {
+    --primary-color: #1976d2;
+    --secondary-color: #f50057;
+    --bg-color: #f9f9f9;
+    --card-bg: #ffffff;
+    --text-color: #333333;
+    --border-radius: 8px;
+    --spacing: 16px;
+}
+
+/* === Cart Page Styles === */
+.cart-container {
+    padding: calc(var(--spacing) * 2);
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--bg-color);
+}
+
+.cart-title {
+    font-size: 2rem;
+    margin-bottom: calc(var(--spacing) * 1.5);
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.cart-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: calc(var(--spacing) * 2);
+}
+
+.cart-item-card {
+    display: flex;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.cart-item-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+}
+
+.cart-item-details {
+    flex: 1;
+    padding: var(--spacing);
+}
+
+.cart-summary-card {
+    background: var(--card-bg);
+    padding: var(--spacing);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: var(--spacing);
+}
+
+.cart-summary-button {
+    background: var(--primary-color);
+    color: #ffffff;
+    width: 100%;
+    padding: var(--spacing);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.cart-summary-button:hover {
+    background: #115293;
+}
+
+/* === Checkout Page Styles === */
+.checkout-container {
+    padding: calc(var(--spacing) * 2);
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: var(--bg-color);
+}
+
+.checkout-title {
+    font-size: 2rem;
+    margin-bottom: calc(var(--spacing) * 1.5);
+    text-align: center;
+    color: var(--primary-color);
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: calc(var(--spacing) * 2);
+}
+
+.checkout-form,
+.checkout-summary {
+    background: var(--card-bg);
+    padding: var(--spacing);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-button {
+    background: var(--primary-color);
+    color: #ffffff;
+    width: 100%;
+    padding: var(--spacing);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.checkout-button:hover {
+    background: #115293;
+}

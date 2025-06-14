@@ -1,4 +1,3 @@
-// src/components/dashboards/StoreMemberLayout.jsx
 import React, { useState } from 'react';
 import {
     Box,
@@ -83,6 +82,8 @@ export default function StoreMemberLayout({ children }) {
                 sx={{
                     marginLeft: isMobile ? 0 : `${drawerWidth}px`,
                     width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`,
+                    overflowX: 'auto',
+                    padding: '30px'
                 }}
             >
                 {typeof children === 'function'

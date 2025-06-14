@@ -1,187 +1,149 @@
 // src/pages/CheckoutPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import jwt_decode from 'jwt-decode';
+import useCartStore from '../store/useCartStore';
+import { createOrder } from '../services/orderService';
 import {
-    Box,
+    Container,
+    Grid,
+    Paper,
     Typography,
     TextField,
     Button,
-    CircularProgress,
+    Box,
+    List,
+    ListItem,
+    ListItemText,
+    Divider
 } from '@mui/material';
-import useCartStore from '../store/useCartStore';
-import { createOrder } from '../services/orderService';
-import jwt_decode from 'jwt-decode';
+import '../styles/pages.css';
 
 export default function CheckoutPage() {
     const navigate = useNavigate();
+    const cartItems = useCartStore(s => s.cartItems);
+    const subtotal = useCartStore(s => s.getTotalPrice());
+    const clearCart = useCartStore(s => s.clearCart);
+    const [address, setAddress] = useState('');
+    const [phone, setPhone] = useState('');
 
-    // Grab the cart items array from Zustand
-    const cartItems = useCartStore((s) => s.cartItems);
-    const subtotal = useCartStore((s) => s.getTotalPrice());
-    const clearCart = useCartStore((s) => s.clearCart);
+    const shippingCost = 5;
+    const taxAmount = +(subtotal * 0.1).toFixed(2);
+    const totalAmount = +(subtotal + shippingCost + taxAmount).toFixed(2);
 
-    const [loading, setLoading] = useState(true);
-    const [shippingAddress, setShippingAddress] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [error, setError] = useState('');
-
-    // Check authentication and cart status
     useEffect(() => {
-        if (!cartItems.length) {
-            navigate('/cart');
-            return;
-        }
-
-        const token = localStorage.getItem('token');
-        if (!token) {
-            // Redirect to login with return URL
-            navigate('/login', { state: { from: '/checkout' } });
-            return;
-        }
-
-        setLoading(false);
+        if (!cartItems.length) navigate('/cart');
     }, [cartItems, navigate]);
 
-    // Still checking cart & token?
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" mt={4}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    // Double-check token again—if missing, redirect to home
-    const token = localStorage.getItem('token');
-    if (!token) {
-        return <Navigate to="/" />;
-    }
-
-    // Double-check cart once more—if somehow empty, go back to /cart
-    if (!cartItems.length) {
-        return <Navigate to="/cart" />;
-    }
-
-    // Build order totals
-    const shippingCost = 5;
-    const taxAmount = parseFloat((subtotal * 0.1).toFixed(2));
-    const totalAmount = parseFloat((subtotal + shippingCost + taxAmount).toFixed(2));
-
-    // "Confirm Order" click handler
     const handleSubmit = async () => {
-        setError('');
-        const tokenInside = localStorage.getItem('token');
-        if (!tokenInside) {
-            navigate('/login', { state: { from: '/checkout' } });
-            return;
-        }
+        const token = localStorage.getItem('token');
+        if (!token) return navigate('/login', { state: { from: '/checkout' } });
 
-        let decoded;
-        try {
-            decoded = jwt_decode(tokenInside);
-        } catch {
-            setError('Invalid token. Please log in again.');
-            navigate('/login', { state: { from: '/checkout' } });
-            return;
-        }
-
-        const customerId = decoded.sub;
+        const { sub: customerId } = jwt_decode(token);
         const storeId = cartItems[0]?.storeId;
-        if (!storeId) {
-            setError('Missing store information.');
-            return;
-        }
+        if (!storeId) return alert('Store ID manquant.');
 
-        // Build the "items" array
-        const items = cartItems.map((item) => ({
-            productId: item.productId,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-            ...(item.color ? { color: item.color } : {}),
+        const items = cartItems.map(i => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            price: i.price,
+            name: i.name,
+            image: i.image
         }));
 
-        const createOrderDto = {
+        const payload = {
             customerId,
             storeId,
             paymentMethod: 'cash_on_delivery',
             items,
-            shippingAddress,
-            phoneNumber,
+            shippingAddress: address,
+            phoneNumber: phone,
             shippingCost,
             subtotal,
             taxAmount,
-            totalAmount,
+            totalAmount
         };
 
         try {
-            await createOrder(createOrderDto);
+            await createOrder(payload);
             clearCart();
-            navigate(`/order-confirmation/${storeId}`, {
-                state: {
-                    orderDetails: {
-                        totalAmount,
-                        shippingAddress,
-                        items,
-                    }
-                }
-            });
-        } catch (e) {
-            console.error(e);
-            setError('Failed to place order. Please try again.');
+            navigate('/order-confirmation');
+        } catch {
+            alert('Échec de la commande, réessayez.');
         }
     };
 
     return (
-        <Box p={3} maxWidth={600} mx="auto">
-            <Typography variant="h4" gutterBottom>
-                Checkout
+        <Container className="checkout-container">
+            <Typography variant="h4" className="checkout-title">
+                Paiement
             </Typography>
 
-            {error && (
-                <Typography color="error" gutterBottom>
-                    {error}
-                </Typography>
-            )}
+            <Grid container className="checkout-grid">
+                <Grid item xs={12} md={6}>
+                    <Paper className="checkout-form">
+                        <Typography variant="h6">Informations de livraison</Typography>
+                        <TextField
+                            label="Adresse"
+                            fullWidth
+                            required
+                            margin="normal"
+                            value={address}
+                            onChange={e => setAddress(e.target.value)}
+                        />
+                        <TextField
+                            label="Téléphone"
+                            fullWidth
+                            required
+                            margin="normal"
+                            value={phone}
+                            onChange={e => setPhone(e.target.value)}
+                        />
+                        <Button
+                            variant="contained"
+                            onClick={handleSubmit}
+                            disabled={!address || !phone}
+                            className="checkout-button"
+                        >
+                            Confirmer la commande
+                        </Button>
+                    </Paper>
+                </Grid>
 
-            <TextField
-                label="Shipping Address"
-                fullWidth
-                margin="normal"
-                value={shippingAddress}
-                onChange={(e) => setShippingAddress(e.target.value)}
-                required
-            />
-            <TextField
-                label="Phone Number"
-                fullWidth
-                margin="normal"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                required
-            />
-
-            <Box mt={4}>
-                <Typography>Subtotal: ${subtotal.toFixed(2)}</Typography>
-                <Typography>Shipping: ${shippingCost.toFixed(2)}</Typography>
-                <Typography>Tax (10%): ${taxAmount.toFixed(2)}</Typography>
-                <Typography variant="h6" gutterBottom>
-                    Total: ${totalAmount.toFixed(2)}
-                </Typography>
-            </Box>
-
-            <Box mt={2}>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    onClick={handleSubmit}
-                    disabled={!shippingAddress || !phoneNumber}
-                >
-                    Confirm Order
-                </Button>
-            </Box>
-        </Box>
+                <Grid item xs={12} md={6}>
+                    <Paper className="checkout-summary">
+                        <Typography variant="h6">Récapitulatif</Typography>
+                        <List>
+                            {cartItems.map(i => (
+                                <ListItem key={i.productId}>
+                                    <ListItemText
+                                        primary={`${i.name} x${i.quantity}`}
+                                        secondary={`${(i.price * i.quantity).toFixed(2)} DT`}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                        <Divider sx={{ margin: '16px 0' }} />
+                        <Box display="flex" justifyContent="space-between">
+                            <Typography>Sous-total</Typography>
+                            <Typography>{subtotal.toFixed(2)} DT</Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                            <Typography>Livraison</Typography>
+                            <Typography>{shippingCost.toFixed(2)} DT</Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between">
+                            <Typography>Taxe (10%)</Typography>
+                            <Typography>{taxAmount.toFixed(2)} DT</Typography>
+                        </Box>
+                        <Divider sx={{ margin: '16px 0' }} />
+                        <Box display="flex" justifyContent="space-between">
+                            <Typography variant="h6">Total</Typography>
+                            <Typography variant="h6">{totalAmount.toFixed(2)} DT</Typography>
+                        </Box>
+                    </Paper>
+                </Grid>
+            </Grid>
+        </Container>
     );
 }

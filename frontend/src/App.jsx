@@ -11,6 +11,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
+import './styles/pages.css';
 
 import AdminDashboard from './components/dashboards/AdminDashboard';
 import AssignStoreOwner from './components/dashboards/AssignStoreOwner';

@@ -42,7 +42,6 @@ export default function ProductsManagement() {
     const [snackbar, setSnackbar] = useState({ open: false, msg: '', sev: 'success' });
     const [breadcrumbs, setBreadcrumbs] = useState({});
 
-    // On mount: figure out which store this user belongs to (member → owner)
     useEffect(() => {
         let cancelled = false;
 
@@ -77,7 +76,6 @@ export default function ProductsManagement() {
         return () => { cancelled = true; };
     }, []);
 
-    // Compute breadcrumb paths for all categories
     const computeBreadcrumbs = (categories) => {
         const lookup = {};
         categories.forEach(cat => {
@@ -110,7 +108,6 @@ export default function ProductsManagement() {
         return memo;
     };
 
-    // Fetch products for a given store
     function loadProducts(id) {
         setLoading(true);
         getProductsByStore(id)
@@ -118,7 +115,6 @@ export default function ProductsManagement() {
             .finally(() => setLoading(false));
     }
 
-    // While figuring out storeId
     if (storeId === undefined) {
         return (
             <Box className="dashboard-loading">
@@ -127,7 +123,6 @@ export default function ProductsManagement() {
         );
     }
 
-    // No access
     if (storeId === null) {
         return (
             <Typography className="dashboard-error-message" align="center">
@@ -136,7 +131,6 @@ export default function ProductsManagement() {
         );
     }
 
-    // Open create/edit dialog
     const openForm = prod => {
         setCurrent({
             _id: prod?._id,
@@ -157,10 +151,8 @@ export default function ProductsManagement() {
         setCurrent(null);
     };
 
-    // Handle file input
     const onFile = e => setCurrent(c => ({ ...c, imageFile: e.target.files[0] }));
 
-    // Save (create or update)
     const saveProduct = async () => {
         const fd = new FormData();
         fd.append('name', current.name);
@@ -187,7 +179,6 @@ export default function ProductsManagement() {
         }
     };
 
-    // Delete product
     const remove = async id => {
         if (!window.confirm('Delete this product?')) return;
         try {
@@ -213,8 +204,8 @@ export default function ProductsManagement() {
                     <CircularProgress />
                 </Box>
             ) : (
-                <TableContainer component={Paper}>
-                    <Table className="dashboard-table">
+                <TableContainer component={Paper} sx={{ width: '100%', overflowX: 'auto' }}>
+                    <Table className="dashboard-table" sx={{ minWidth: 1000 }}>
                         <TableHead>
                             <TableRow>
                                 <TableCell>Name</TableCell>

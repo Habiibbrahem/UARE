@@ -1,3 +1,4 @@
+// src/components/dashboards/StoreMemberLayout.jsx
 import React, { useState } from 'react';
 import {
     Box,
@@ -8,82 +9,86 @@ import {
     ListItemText,
     Toolbar,
     Typography,
-    styled
+    useTheme,
+    useMediaQuery,
 } from '@mui/material';
+import '../../styles/dashboard.css';
 
 const drawerWidth = 240;
 
-const MainContent = styled(Box)(({ theme }) => ({
-    flexGrow: 1,
-    padding: theme.spacing(3),
-    marginLeft: `${drawerWidth}px`,
-    marginTop: '70px',
-    backgroundColor: theme.palette.background.default,
-    minHeight: 'calc(100vh - 70px)'
-}));
-
-const SidebarDrawer = styled(Drawer)(({ theme }) => ({
-    width: drawerWidth,
-    flexShrink: 0,
-    '& .MuiDrawer-paper': {
-        width: drawerWidth,
-        boxSizing: 'border-box',
-        position: 'fixed',
-        top: '70px',
-        height: 'calc(100vh - 70px)',
-        backgroundColor: theme.palette.primary.dark,
-        color: theme.palette.primary.contrastText,
-    },
-}));
-
-const SidebarListItem = styled(ListItemButton)(({ theme, selected }) => ({
-    borderRadius: theme.shape.borderRadius,
-    margin: theme.spacing(0.5, 1),
-    paddingLeft: theme.spacing(2),
-    backgroundColor: selected ? theme.palette.primary.main : 'transparent',
-    '&:hover': {
-        backgroundColor: selected ? theme.palette.primary.light : theme.palette.primary.light,
-    },
-    transition: 'background-color 0.3s ease',
-}));
-
-export default function StoreOwnerLayout({ children }) {
+export default function StoreMemberLayout({ children }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     const menuItems = [
-        { label: 'Manage Members', key: 'members' },
-        { label: 'Manage Orders', key: 'orders' },
+        { label: 'Manage Categories', key: 'categories' },
+        { label: 'Manage Products', key: 'products' },
     ];
 
-    const handleListItemClick = (index) => {
-        setSelectedIndex(index);
-    };
-
     return (
-        <Box sx={{ display: 'flex', backgroundColor: 'background.default' }}>
-            <SidebarDrawer variant="permanent">
-                <Toolbar>
+        <Box className="dashboard-container">
+            <Drawer
+                variant="permanent"
+                sx={{
+                    width: drawerWidth,
+                    flexShrink: 0,
+                    [`& .MuiDrawer-paper`]: {
+                        width: drawerWidth,
+                        boxSizing: 'border-box',
+                        position: 'fixed',
+                        backgroundColor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
+                        top: '106px',
+                        height: 'calc(100vh - 106px)',
+                        [theme.breakpoints.down('md')]: {
+                            top: '92px',
+                            height: 'calc(100vh - 92px)',
+                        }
+                    },
+                }}
+                className="dashboard-sidebar"
+            >
+                <Toolbar className="dashboard-sidebar-header">
                     <Typography variant="h6" noWrap component="div">
-                        Store Owner Panel
+                        Store Member Panel
                     </Typography>
                 </Toolbar>
-                <List>
-                    {menuItems.map((item, index) => (
-                        <ListItem key={item.key} disablePadding>
-                            <SidebarListItem
-                                selected={selectedIndex === index}
-                                onClick={() => handleListItemClick(index)}
-                            >
-                                <ListItemText primary={item.label} />
-                            </SidebarListItem>
+                <List className="dashboard-menu">
+                    {menuItems.map((item, idx) => (
+                        <ListItem
+                            key={item.key}
+                            disablePadding
+                            selected={selectedIndex === idx}
+                            onClick={() => setSelectedIndex(idx)}
+                            className={`dashboard-menu-item ${selectedIndex === idx ? 'selected' : ''}`}
+                        >
+                            <ListItemButton className="dashboard-menu-button">
+                                <ListItemText
+                                    primary={item.label}
+                                    primaryTypographyProps={{
+                                        color: 'inherit',
+                                        fontWeight: selectedIndex === idx ? '600' : '400'
+                                    }}
+                                />
+                            </ListItemButton>
                         </ListItem>
                     ))}
                 </List>
-            </SidebarDrawer>
+            </Drawer>
 
-            <MainContent component="main">
-                {typeof children === 'function' ? children(menuItems[selectedIndex].key) : children}
-            </MainContent>
+            <Box
+                component="main"
+                className="dashboard-main-content"
+                sx={{
+                    marginLeft: isMobile ? 0 : `${drawerWidth}px`,
+                    width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`,
+                }}
+            >
+                {typeof children === 'function'
+                    ? children(menuItems[selectedIndex].key)
+                    : children}
+            </Box>
         </Box>
     );
 }
