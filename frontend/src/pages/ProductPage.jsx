@@ -1,9 +1,7 @@
-// src/pages/ProductPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
     Box,
-    CircularProgress,
     Typography,
     Card,
     CardMedia,
@@ -21,13 +19,17 @@ import {
     AccordionDetails,
     List,
     ListItem,
-    ListItemText
+    ListItemText,
+    Grid,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ShoppingCart, Favorite, Share, ExpandMore } from '@mui/icons-material';
 
 import axiosInstance from '../services/axiosInstance';
-import { getProductById } from '../services/productService';
+import {
+    getProductById,
+    getProductRecommendations,
+} from '../services/productService';
 import useCartStore from '../store/useCartStore';
 
 // ─── Styled Components ──────────────────────────────────────────────────────────
@@ -161,13 +163,39 @@ const ActionsBox = styled(Box)(({ theme }) => ({
         '&:hover': { backgroundColor: theme.palette.action.hover, transform: 'scale(1.1)' },
     },
 }));
+const RecommendationsBox = styled(Box)(({ theme }) => ({
+    marginTop: theme.spacing(8),
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: theme.shape.borderRadius * 2,
+    padding: theme.spacing(4),
+    boxShadow: '0px 2px 12px rgba(0,0,0,0.04)',
+}));
+const RecommendationCard = styled(Card)(({ theme }) => ({
+    borderRadius: theme.shape.borderRadius * 2,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+    textAlign: 'center',
+    transition: 'transform 0.2s',
+    '&:hover': { transform: 'scale(1.03)' },
+    padding: theme.spacing(1.5, 1, 2),
+    height: '100%',
+}));
 
-// ─── Component ─────────────────────────────────────────────────────────────────
+const RecentlyBox = styled(Box)(({ theme }) => ({
+    marginTop: theme.spacing(5),
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: theme.shape.borderRadius * 2,
+    padding: theme.spacing(4),
+    boxShadow: '0px 1px 8px rgba(0,0,0,0.025)',
+}));
 
 export default function ProductPage() {
     const { productId } = useParams();
     const [product, setProduct] = useState(null);
+    const [recommendations, setRecommendations] = useState([]);
+    const [recentProducts, setRecentProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [recLoading, setRecLoading] = useState(false);
+    const [recentLoading, setRecentLoading] = useState(false);
     const [error, setError] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [selectedColor, setSelectedColor] = useState('');
@@ -175,24 +203,72 @@ export default function ProductPage() {
     const [mainImage, setMainImage] = useState('');
     const addToCart = useCartStore((state) => state.addToCart);
 
+    // Util for localStorage management
+    const RECENT_KEY = 'recently_viewed_products';
+    function addToRecentlyViewed(id) {
+        let arr = [];
+        try {
+            arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+        } catch {
+            arr = [];
+        }
+        arr = arr.filter(pid => pid !== id); // remove if already present
+        arr.unshift(id); // add to front
+        if (arr.length > 12) arr = arr.slice(0, 12);
+        localStorage.setItem(RECENT_KEY, JSON.stringify(arr));
+    }
+    function getRecentlyViewedExceptCurrent(currentId) {
+        try {
+            let arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+            return arr.filter(pid => pid !== currentId).slice(0, 8);
+        } catch {
+            return [];
+        }
+    }
+
     useEffect(() => {
         setLoading(true);
+        setError(null);
+        setRecommendations([]);
+        setRecentProducts([]);
+        // Add to recently viewed
+        addToRecentlyViewed(productId);
+
         getProductById(productId)
             .then((res) => {
                 setProduct(res.data);
                 setMainImage(res.data.image);
                 if (res.data.colors?.length) setSelectedColor(res.data.colors[0]);
                 if (res.data.sizes?.length) setSelectedSize(res.data.sizes[0]);
+                setRecLoading(true);
+                getProductRecommendations(productId)
+                    .then(r => setRecommendations(r.data))
+                    .finally(() => setRecLoading(false));
             })
             .catch((err) => setError(err.message || 'Failed to load product'))
             .finally(() => setLoading(false));
+    }, [productId]);
+
+    // Fetch recently viewed products data
+    useEffect(() => {
+        setRecentLoading(true);
+        const ids = getRecentlyViewedExceptCurrent(productId);
+        if (!ids.length) {
+            setRecentProducts([]);
+            setRecentLoading(false);
+            return;
+        }
+        // Fetch all by Promise.all
+        Promise.all(ids.map(id => getProductById(id).then(r => r.data).catch(() => null)))
+            .then(resArr => setRecentProducts(resArr.filter(x => !!x)))
+            .finally(() => setRecentLoading(false));
+        // eslint-disable-next-line
     }, [productId]);
 
     if (loading) return (
         <PageContainer>
             <ProductContainer>
                 <Skeleton variant="rectangular" width="100%" height={500} />
-                {/* ...more skeletons */}
             </ProductContainer>
         </PageContainer>
     );
@@ -388,6 +464,96 @@ export default function ProductPage() {
                         </Accordion>
                     </DetailSection>
                 </ProductGrid>
+
+                {/* --- RECOMMENDATION SECTION --- */}
+                <RecommendationsBox>
+                    <Typography variant="h5" fontWeight="700" mb={3}>
+                        You may also like
+                    </Typography>
+                    {recLoading ? (
+                        <Grid container spacing={2}>
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <Grid item xs={12} sm={6} md={3} key={i}>
+                                    <Skeleton variant="rectangular" height={220} />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    ) : recommendations.length === 0 ? (
+                        <Typography color="text.secondary">No recommendations available.</Typography>
+                    ) : (
+                        <Grid container spacing={3}>
+                            {recommendations.map((rec) => (
+                                <Grid item xs={12} sm={6} md={3} key={rec._id}>
+                                    <RecommendationCard>
+                                        <Link to={`/product/${rec._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                            <CardMedia
+                                                component="img"
+                                                height="160"
+                                                image={rec.image ? `${axiosInstance.defaults.baseURL}${rec.image}` : '/no-image.png'}
+                                                alt={rec.name}
+                                                style={{ objectFit: 'contain', background: '#fafbfc' }}
+                                            />
+                                            <Typography variant="subtitle1" fontWeight="600" mt={1}>
+                                                {rec.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" mb={1}>
+                                                {rec.categoryId?.name || ''}
+                                            </Typography>
+                                            <Typography variant="h6" color="primary">
+                                                {(rec.price || 0).toFixed(2)} TND
+                                            </Typography>
+                                        </Link>
+                                    </RecommendationCard>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    )}
+                </RecommendationsBox>
+
+                {/* --- RECENTLY VIEWED SECTION --- */}
+                <RecentlyBox>
+                    <Typography variant="h6" fontWeight="700" mb={3}>
+                        Recently Viewed Products
+                    </Typography>
+                    {recentLoading ? (
+                        <Grid container spacing={2}>
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <Grid item xs={12} sm={6} md={3} key={i}>
+                                    <Skeleton variant="rectangular" height={180} />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    ) : recentProducts.length === 0 ? (
+                        <Typography color="text.secondary">No recently viewed products.</Typography>
+                    ) : (
+                        <Grid container spacing={3}>
+                            {recentProducts.map((rec) => (
+                                <Grid item xs={12} sm={6} md={3} key={rec._id}>
+                                    <RecommendationCard>
+                                        <Link to={`/product/${rec._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                            <CardMedia
+                                                component="img"
+                                                height="120"
+                                                image={rec.image ? `${axiosInstance.defaults.baseURL}${rec.image}` : '/no-image.png'}
+                                                alt={rec.name}
+                                                style={{ objectFit: 'contain', background: '#fafbfc' }}
+                                            />
+                                            <Typography variant="subtitle1" fontWeight="600" mt={1}>
+                                                {rec.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" mb={1}>
+                                                {rec.categoryId?.name || ''}
+                                            </Typography>
+                                            <Typography variant="h6" color="primary">
+                                                {(rec.price || 0).toFixed(2)} TND
+                                            </Typography>
+                                        </Link>
+                                    </RecommendationCard>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    )}
+                </RecentlyBox>
             </ProductContainer>
         </PageContainer>
     );

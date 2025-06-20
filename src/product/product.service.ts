@@ -172,14 +172,10 @@ export class ProductService {
             .exec();
     }
 
-    /**
-     * Get products in a category and all its descendant categories
-     */
     async findByCategory(categoryId: string): Promise<Product[]> {
         if (!Types.ObjectId.isValid(categoryId)) {
             throw new BadRequestException('Invalid category ID');
         }
-        // Build parent -> children mapping using raw values
         const allCategories = await this.categoryService.findAll();
         const childrenMap = new Map<string, string[]>();
         allCategories.forEach(cat => {
@@ -192,7 +188,6 @@ export class ProductService {
             }
         });
 
-        // Recursively gather descendant IDs
         const descendantSet = new Set<string>();
         const collect = (id: string) => {
             const kids = childrenMap.get(id) || [];
@@ -205,7 +200,6 @@ export class ProductService {
         };
         collect(categoryId);
 
-        // Query parent + descendants
         const allIds = [categoryId, ...Array.from(descendantSet)].map(
             id => new Types.ObjectId(id),
         );
@@ -220,6 +214,22 @@ export class ProductService {
         const regex = new RegExp(q, 'i');
         return this.productModel
             .find({ $or: [{ name: regex }, { description: regex }] })
+            .populate('categoryId', 'name')
+            .exec();
+    }
+
+    // --- RECOMMENDATION FEATURE ---
+    async findRecommendations(id: string): Promise<Product[]> {
+        // Find the product and its category
+        const product = await this.findOne(id);
+        if (!product || !product.categoryId) return [];
+        // Get up to 8 other products in the same category, excluding this one
+        return this.productModel
+            .find({
+                _id: { $ne: product._id },
+                categoryId: product.categoryId._id || product.categoryId,
+            })
+            .limit(8)
             .populate('categoryId', 'name')
             .exec();
     }

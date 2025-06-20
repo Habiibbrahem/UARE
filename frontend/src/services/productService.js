@@ -1,4 +1,3 @@
-// src/services/productService.js
 import axiosInstance from './axiosInstance';
 
 // Fetch all products for a given store
@@ -7,11 +6,15 @@ export const getProductsByStore = (storeId) =>
 
 // Fetch products by category
 export const getProductsByCategory = (categoryId) =>
-    axiosInstance.get(`/products/category/${categoryId}`);   // ← new
+    axiosInstance.get(`/products/category/${categoryId}`);
 
 // Fetch a single product by its ID
 export const getProductById = (productId) =>
     axiosInstance.get(`/products/${productId}`);
+
+// Fetch recommendations for a product (same sub-subcategory)
+export const getProductRecommendations = (productId) =>
+    axiosInstance.get(`/products/${productId}/recommendations`);
 
 // Create new product (expects FormData)
 export const createProduct = (formData) =>

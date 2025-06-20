@@ -1,5 +1,3 @@
-// src/products/product.controller.ts
-
 import {
   Controller,
   Get,
@@ -27,7 +25,6 @@ import { RequireRoles } from 'src/auth/decorators/roles.decorator';
 import { Roles } from 'src/auth/constants/roles.enum';
 import { RequestWithUser } from '../types/request-with-user.type';
 
-// Configure Multer to write into <project-root>/uploads
 function imageFileInterceptor() {
   return FileInterceptor('image', {
     storage: diskStorage({
@@ -45,7 +42,7 @@ function imageFileInterceptor() {
         cb(null, true);
       }
     },
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+    limits: { fileSize: 5 * 1024 * 1024 },
   });
 }
 
@@ -53,7 +50,6 @@ function imageFileInterceptor() {
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
 
-  /** Create a product (with optional image upload) */
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRoles(Roles.STORE_OWNER, Roles.STORE_MEMBER, Roles.ADMIN)
@@ -67,18 +63,16 @@ export class ProductController {
     return this.productService.create({ ...createDto, image }, req.user);
   }
 
-  /** Get all products (public) */
   @Get()
   findAll() {
     return this.productService.findAll();
   }
-  /** Search by name or description (public) */
+
   @Get('search')
   search(@Query('q') q: string) {
     return this.productService.search(q);
   }
 
-  /** Filter products by storeId/categoryId/minPrice/maxPrice (public) */
   @Get('search/filter')
   filterProducts(
     @Query('storeId') storeId?: string,
@@ -97,25 +91,26 @@ export class ProductController {
     return this.productService.findAll(filter);
   }
 
-  /** Get products by store (public) */
   @Get('store/:storeId')
   findByStore(@Param('storeId') storeId: string) {
     return this.productService.findByStore(storeId);
   }
 
-  /** Get products by category (public) */
   @Get('category/:categoryId')
   findByCategory(@Param('categoryId') categoryId: string) {
     return this.productService.findByCategory(categoryId);
   }
 
-  /** Get one product by ID (public) */
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productService.findOne(id);
   }
 
-  /** Update a product (with optional image upload) */
+  @Get(':id/recommendations')
+  async findRecommendations(@Param('id') id: string) {
+    return this.productService.findRecommendations(id);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRoles(Roles.STORE_OWNER, Roles.STORE_MEMBER, Roles.ADMIN)
@@ -131,7 +126,6 @@ export class ProductController {
     return this.productService.update(id, payload, req.user);
   }
 
-  /** Delete a product by ID */
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRoles(Roles.STORE_OWNER, Roles.STORE_MEMBER, Roles.ADMIN)
