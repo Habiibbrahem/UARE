@@ -1,16 +1,20 @@
 // src/api/userService.js
-import axios from 'axios';
+import axiosInstance from '../services/axiosInstance';
 
-const API_BASE = 'http://localhost:3000';
+export const getCurrentUser = () =>
+    axiosInstance.get('/users/me');
 
-export const createUser = (userData, token) => {
-    return axios.post(
-        `${API_BASE}/users`,
-        userData,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
-};
+export const updateCurrentUser = ({ email, currentPassword, newPassword, confirmPassword }) =>
+    axiosInstance.put('/users/me', {
+        email,
+        currentPassword,
+        newPassword,
+        confirmPassword,
+    });
+
+export const deleteCurrentUser = (currentPassword) =>
+    axiosInstance.delete('/users/me', { data: { currentPassword } });
+
+// (keep createUser for admin/store-owner panels)
+export const createUser = (userData) =>
+    axiosInstance.post('/users', userData);

@@ -1,0 +1,77 @@
+/* Container centering & background */
+.account-page {
+    margin: 4rem auto;
+    padding: 0 1rem;
+    background: #f5f7fa;
+    min-height: calc(100vh - 64px);
+}
+
+/* Card wrapper */
+.account-card {
+    margin: 0 auto;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+/* Header styling */
+.account-header {
+    background: linear-gradient(135deg, #42a5f5 0%, #478ed1 100%);
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.account-title {
+    margin: 0;
+    font-weight: 600;
+}
+
+.account-divider {
+    margin-top: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.6);
+    height: 2px;
+    width: 40%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Form area */
+.account-form {
+    padding: 2rem;
+    background: white;
+}
+
+/* MUI TextField override */
+.account-form .MuiOutlinedInput-root {
+    border-radius: 8px;
+}
+
+.account-form .MuiFormHelperText-root {
+    margin-left: 0;
+}
+
+/* Buttons */
+.primary-button {
+    background-color: #1976d2 !important;
+    color: #fff !important;
+    text-transform: none !important;
+    border-radius: 8px !important;
+    padding: 0.6rem 1.6rem !important;
+}
+
+.primary-button:hover {
+    background-color: #115293 !important;
+}
+
+.danger-button {
+    border-color: #d32f2f !important;
+    color: #d32f2f !important;
+    text-transform: none !important;
+    border-radius: 8px !important;
+    padding: 0.6rem 1.6rem !important;
+}
+
+.danger-button:hover {
+    background-color: rgba(211, 47, 47, 0.08) !important;
+}

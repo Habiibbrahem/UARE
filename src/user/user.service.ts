@@ -1,5 +1,5 @@
 // src/user/user.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
@@ -11,51 +11,59 @@ import { Roles } from '../auth/constants/roles.enum';
 export class UserService {
     constructor(@InjectModel(User.name) private userModel: Model<User>) { }
 
+    /** Find user by ID */
+    async findById(id: string): Promise<User | null> {
+        return this.userModel.findById(id).exec();
+    }
+
+    /** Verify plaintext vs stored hash */
+    async verifyPassword(userId: string, plain: string): Promise<boolean> {
+        const user = await this.findById(userId);
+        if (!user) throw new NotFoundException('User not found');
+        return bcrypt.compare(plain, user.password);
+    }
+
+    /** Update user (hash new password if provided) */
+    async update(
+        id: string,
+        updateDto: Partial<CreateUserDto>
+    ): Promise<User | null> {
+        if (updateDto.password) {
+            updateDto.password = await bcrypt.hash(updateDto.password, 10);
+        }
+        return this.userModel
+            .findByIdAndUpdate(id, updateDto, { new: true })
+            .exec();
+    }
+
+    /** Delete user */
+    async remove(id: string): Promise<boolean> {
+        const result = await this.userModel.findByIdAndDelete(id).exec();
+        return result != null;
+    }
+
+    // — the rest of your existing methods remain unchanged —
+
     async findByEmail(email: string): Promise<User | null> {
         return this.userModel.findOne({ email }).exec();
     }
 
-    /**
-     * Create a new user.  If user.password exists, hash it exactly once here.
-     */
-    async create(user: Partial<CreateUserDto & { role?: Roles }>): Promise<User> {
-        if (user.password) {
-            user.password = await bcrypt.hash(user.password, 10);
+    async create(dto: Partial<CreateUserDto & { role?: Roles }>): Promise<User> {
+        if (dto.password) {
+            dto.password = await bcrypt.hash(dto.password, 10);
         }
-        const createdUser = new this.userModel(user);
-        return createdUser.save();
+        return new this.userModel(dto).save();
     }
 
     async findAll(): Promise<User[]> {
         return this.userModel.find().exec();
     }
 
-    async findById(id: string): Promise<User | null> {
-        return this.userModel.findById(id).exec();
-    }
-
-    async update(
-        id: string,
-        updateUserDto: Partial<CreateUserDto>,
-    ): Promise<User | null> {
-        if (updateUserDto.password) {
-            updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
-        }
-        return this.userModel
-            .findByIdAndUpdate(id, updateUserDto, { new: true })
-            .exec();
-    }
-
-    async remove(id: string): Promise<boolean> {
-        const result = await this.userModel.findByIdAndDelete(id).exec();
-        return result != null;
-    }
-
     async findByRole(role: string): Promise<User[]> {
         return this.userModel.find({ role }).exec();
     }
 
-    async findStoreOwnersWithStores() {
+    async findStoreOwnersWithStores(): Promise<User[]> {
         return this.userModel
             .find({ role: Roles.STORE_OWNER })
             .populate('stores', 'name address')

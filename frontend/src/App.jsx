@@ -3,38 +3,41 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 
-import SearchResultsPage from './pages/SearchResultsPage';
-import CategoryPage from './pages/CategoryPage';      // ← new
-import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import SearchResultsPage from './pages/SearchResultsPage';
+import CategoryPage from './pages/CategoryPage';
 import StorePage from './pages/StorePage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
+import AccountPage from './pages/AccountPage';    // ← make sure this exists
+
+import Navbar from './components/Navbar';
 
 import AdminDashboard from './components/dashboards/AdminDashboard';
 import AssignStoreOwner from './components/dashboards/AssignStoreOwner';
-import StoreMemberDashboard from './components/dashboards/StoreMemberDashboard';
-import Unauthorized from './components/dashboards/Unauthorized';
 import StoreOwnerLayout from './components/dashboards/StoreOwnerLayout';
 import MembersManagement from './components/dashboards/MembersManagement';
 import OrdersManagement from './components/dashboards/OrdersManagement';
+import StoreMemberDashboard from './components/dashboards/StoreMemberDashboard';
+import Unauthorized from './components/dashboards/Unauthorized';
 
 import './styles/pages.css';
 
 function RequireAuth({ children, allowedRoles }) {
   const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/login" />;
+  if (!token) return <Navigate to="/login" replace />;
   try {
-    const base64 = token.split('.')[1];
-    const { role } = JSON.parse(atob(base64));
-    if (allowedRoles.includes(role.toLowerCase())) return children;
-    return <Navigate to="/unauthorized" />;
+    const { role } = JSON.parse(atob(token.split('.')[1]));
+    if (allowedRoles.includes(role.toLowerCase())) {
+      return children;
+    }
+    return <Navigate to="/unauthorized" replace />;
   } catch {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 }
 
@@ -43,6 +46,7 @@ export default function App() {
     <Router>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Navbar />
+
         <Box component="main" sx={{ flexGrow: 1 }}>
           <Routes>
             {/* Public */}
@@ -50,12 +54,22 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/search" element={<SearchResultsPage />} />
-            <Route path="/categories/:categoryId" element={<CategoryPage />} />  {/* ← new */}
+            <Route path="/categories/:categoryId" element={<CategoryPage />} />
             <Route path="/store/:storeId" element={<StorePage />} />
             <Route path="/product/:productId" element={<ProductPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/order-confirmation/:storeId" element={<OrderConfirmationPage />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+
+            {/* Account */}
+            <Route
+              path="/account"
+              element={
+                <RequireAuth allowedRoles={['customer', 'admin', 'store_owner', 'store_member']}>
+                  <AccountPage />
+                </RequireAuth>
+              }
+            />
 
             {/* Protected checkout */}
             <Route

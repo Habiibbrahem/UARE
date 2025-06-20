@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { Types } from 'mongoose'; // Add this import for Types
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -19,9 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
+    // Attach `userId` (not `_id`) so your controller-level
+    // “/users/me” can read `req.user.userId`
     async validate(payload: any) {
         return {
-            _id: new Types.ObjectId(payload.sub), // Ensure it is an ObjectId
+            userId: payload.sub,
             email: payload.email,
             role: payload.role,
         };

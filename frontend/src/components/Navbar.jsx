@@ -1,5 +1,12 @@
+// src/components/Navbar.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaSearch, FaUser, FaShoppingBag, FaChevronRight, FaTimes, FaBars } from 'react-icons/fa';
+import {
+    FaSearch,
+    FaUser,
+    FaChevronRight,
+    FaTimes,
+    FaBars,
+} from 'react-icons/fa';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
 import axios from 'axios';
@@ -9,7 +16,7 @@ import CartIcon from './CartIcon';
 
 const API_BASE = 'http://localhost:3000';
 
-const Navbar = ({ isAdmin = false }) => {
+export default function Navbar({ isAdmin = false }) {
     const [categories, setCategories] = useState([]);
     const [categoryTree, setCategoryTree] = useState([]);
     const [stores, setStores] = useState([]);
@@ -25,56 +32,49 @@ const Navbar = ({ isAdmin = false }) => {
     const location = useLocation();
 
     const token = localStorage.getItem('token');
-    const [userRole, setUserRole] = useState(null);
     const isLoggedIn = !!token;
+    const [userRole, setUserRole] = useState(null);
 
-    const buildTree = useCallback((categories) => {
+    const buildTree = useCallback((cats) => {
         const map = {};
         const roots = [];
-
-        categories.forEach((cat) => {
-            map[cat._id] = { ...cat, children: [] };
-        });
-
-        categories.forEach((cat) => {
-            if (cat.parent) {
-                if (map[cat.parent]) {
-                    map[cat.parent].children.push(map[cat._id]);
-                } else {
-                    roots.push(map[cat._id]);
-                }
-            } else {
-                roots.push(map[cat._id]);
+        cats.forEach((c) => (map[c._id] = { ...c, children: [] }));
+        cats.forEach((c) => {
+            if (c.parent && map[c.parent]) {
+                map[c.parent].children.push(map[c._id]);
+            } else if (!c.parent) {
+                roots.push(map[c._id]);
             }
         });
-
         return roots;
     }, []);
 
     const fetchData = useCallback(async () => {
         try {
-            const [categoriesRes, storesRes] = await Promise.all([
+            const [catRes, storeRes] = await Promise.all([
                 axios.get(`${API_BASE}/categories`),
-                axios.get(`${API_BASE}/stores`)
+                axios.get(`${API_BASE}/stores`),
             ]);
-            setCategories(categoriesRes.data);
-            setStores(storesRes.data);
+            setCategories(catRes.data);
+            setStores(storeRes.data);
         } catch (err) {
             console.error('Failed to fetch data:', err);
         }
     }, []);
 
-    const handleScroll = useCallback(debounce(() => {
-        setIsScrolled(window.scrollY > 10);
-    }, 100), []);
+    const handleScroll = useCallback(
+        debounce(() => {
+            setIsScrolled(window.scrollY > 10);
+        }, 100),
+        []
+    );
 
     const handleSearch = (e) => {
         e.preventDefault();
-        if (searchQuery.trim()) {
-            navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-            setSearchOpen(false);
-            setSearchQuery('');
-        }
+        if (!searchQuery.trim()) return;
+        navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+        setSearchQuery('');
+        setSearchOpen(false);
     };
 
     const handleLogout = () => {
@@ -96,45 +96,40 @@ const Navbar = ({ isAdmin = false }) => {
     }, [categories, buildTree]);
 
     useEffect(() => {
-        if (token) {
+        if (!token) {
+            setUserRole(null);
+            return;
+        }
+
+        // decode returns { sub, email, role }
+        const { sub: userId, role } = jwt_decode(token);
+        setUserRole(role);
+
+        // fetch the public /users/me (uses JWT guard)
+        (async () => {
             try {
-                const decoded = jwt_decode(token);
-                setUserRole(decoded.role);
+                const res = await axios.get(`${API_BASE}/users/me`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setUserData(res.data);
 
-                const fetchUserData = async () => {
-                    try {
-                        const userResponse = await axios.get(`${API_BASE}/users/${decoded.userId}`, {
-                            headers: { Authorization: `Bearer ${token}` }
-                        });
-                        setUserData(userResponse.data);
-
-                        if (['store_owner', 'store_member'].includes(decoded.role)) {
-                            try {
-                                const storeResponse = await axios.get(`${API_BASE}/stores/user/${decoded.userId}`);
-                                setStoreData(storeResponse.data[0] || null);
-                            } catch (storeErr) {
-                                console.error('Failed to fetch store data:', storeErr);
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Failed to fetch user data:', err);
-                    }
-                };
-
-                fetchUserData();
-            } catch {
-                setUserRole(null);
+                if (['store_owner', 'store_member'].includes(role)) {
+                    const storeRes = await axios.get(
+                        `${API_BASE}/stores/user/${userId}`,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    setStoreData(storeRes.data[0] || null);
+                }
+            } catch (err) {
+                console.error('Failed to fetch user data:', err);
                 setUserData(null);
                 setStoreData(null);
             }
-        } else {
-            setUserRole(null);
-            setUserData(null);
-            setStoreData(null);
-        }
+        })();
     }, [token]);
 
     useEffect(() => {
+        // close mobile menu on route change
         setMobileMenuOpen(false);
         setActiveMegaMenu(null);
     }, [location.pathname]);
@@ -142,49 +137,30 @@ const Navbar = ({ isAdmin = false }) => {
     const renderUserIndicator = () => {
         if (!isLoggedIn) return <FaUser className="icon" />;
 
-        let indicatorText = '';
-        let displayName = '';
-
-        if (userData) {
-            displayName = userData.firstName ||
-                userData.username ||
-                (userData.name && userData.name.split(' ')[0]) ||
-                '';
-        }
-
-        switch (userRole) {
-            case 'admin':
-                indicatorText = 'Admin';
-                break;
-            case 'store_owner':
-                indicatorText = `${storeData?.name || 'Store'} Owner`;
-                break;
-            case 'store_member':
-                indicatorText = `${storeData?.name || 'Store'} - ${displayName || 'Member'}`;
-                break;
-            default:
-                indicatorText = displayName || 'My Account';
-        }
+        let text =
+            userData?.name?.split(' ')[0] || userData?.email || 'My Account';
+        if (userRole === 'admin') text = 'Admin';
+        else if (userRole === 'store_owner')
+            text = `${storeData?.name || 'Store'} Owner`;
+        else if (userRole === 'store_member')
+            text = `${storeData?.name || 'Store'} Member`;
 
         return (
             <div className="user-indicator">
                 <FaUser className="icon" />
-                <span className="user-role-badge">
-                    {indicatorText}
-                </span>
+                <span className="user-role-badge">{text}</span>
             </div>
         );
     };
 
     return (
         <header className={`navbar-container ${isScrolled ? 'scrolled' : ''}`}>
-            <div className="announcement-bar">
-            </div>
+            <div className="announcement-bar" />
 
             <nav className="navbar">
                 <button
                     className="mobile-menu-button"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    onClick={() => setMobileMenuOpen((v) => !v)}
                     aria-label="Toggle menu"
                 >
                     {mobileMenuOpen ? <FaTimes /> : <FaBars />}
@@ -198,7 +174,10 @@ const Navbar = ({ isAdmin = false }) => {
                             onMouseLeave={() => setActiveMegaMenu(null)}
                         >
                             <button className="nav-button">
-                                Boutique {stores.length > 0 && <FaChevronRight className="nav-chevron" />}
+                                Boutique{' '}
+                                {stores.length > 0 && (
+                                    <FaChevronRight className="nav-chevron" />
+                                )}
                             </button>
                             {activeMegaMenu === 'boutique' && (
                                 <div className="mega-menu boutique-mega">
@@ -206,18 +185,24 @@ const Navbar = ({ isAdmin = false }) => {
                                         <div className="mega-menu-inner">
                                             <h2 className="mega-menu-title">Our Boutiques</h2>
                                             <div className="stores-grid">
-                                                {stores.map((store) => (
+                                                {stores.map((s) => (
                                                     <Link
-                                                        key={store._id}
-                                                        to={`/store/${store._id}`}
+                                                        key={s._id}
+                                                        to={`/store/${s._id}`}
                                                         className="store-card"
                                                     >
-                                                        {store.logo ? (
-                                                            <img src={store.logo} alt={store.name} className="store-logo" />
+                                                        {s.logo ? (
+                                                            <img
+                                                                src={s.logo}
+                                                                alt={s.name}
+                                                                className="store-logo"
+                                                            />
                                                         ) : (
-                                                            <div className="store-logo-placeholder">{store.name.charAt(0)}</div>
+                                                            <div className="store-logo-placeholder">
+                                                                {s.name.charAt(0)}
+                                                            </div>
                                                         )}
-                                                        <span className="store-name">{store.name}</span>
+                                                        <span className="store-name">{s.name}</span>
                                                     </Link>
                                                 ))}
                                             </div>
@@ -227,54 +212,54 @@ const Navbar = ({ isAdmin = false }) => {
                             )}
                         </div>
 
-                        {categoryTree.map((topCat) => (
+                        {categoryTree.map((top) => (
                             <div
-                                key={topCat._id}
+                                key={top._id}
                                 className="nav-item"
-                                onMouseEnter={() => setActiveMegaMenu(topCat._id)}
+                                onMouseEnter={() => setActiveMegaMenu(top._id)}
                                 onMouseLeave={() => setActiveMegaMenu(null)}
                             >
                                 <button className="nav-button">
-                                    {topCat.name}
-                                    {topCat.children.length > 0 && <FaChevronRight className="nav-chevron" />}
+                                    {top.name}
+                                    {top.children.length > 0 && (
+                                        <FaChevronRight className="nav-chevron" />
+                                    )}
                                 </button>
-                                {activeMegaMenu === topCat._id && (
+                                {activeMegaMenu === top._id && (
                                     <div className="mega-menu">
                                         <div className="mega-menu-container">
                                             <div className="mega-menu-inner">
                                                 <div className="mega-menu-header">
-                                                    <h2 className="mega-menu-title">{topCat.name}</h2>
+                                                    <h2 className="mega-menu-title">{top.name}</h2>
                                                     <Link
-                                                        to={`/categories/${topCat._id}`}
+                                                        to={`/categories/${top._id}`}
                                                         className="view-all-link"
                                                     >
                                                         View All
                                                     </Link>
                                                 </div>
                                                 <div className="mega-columns-container">
-                                                    {topCat.children.map((childCat) => (
-                                                        <div key={childCat._id} className="mega-col">
+                                                    {top.children.map((c) => (
+                                                        <div key={c._id} className="mega-col">
                                                             <h3 className="mega-col-title">
-                                                                <Link to={`/categories/${childCat._id}`}>
-                                                                    {childCat.name}
-                                                                </Link>
+                                                                <Link to={`/categories/${c._id}`}>{c.name}</Link>
                                                             </h3>
-                                                            {childCat.children.length > 0 ? (
+                                                            {c.children.length > 0 ? (
                                                                 <ul className="mega-links-list">
-                                                                    {childCat.children.map((grand) => (
-                                                                        <li key={grand._id}>
+                                                                    {c.children.map((g) => (
+                                                                        <li key={g._id}>
                                                                             <Link
-                                                                                to={`/categories/${grand._id}`}
+                                                                                to={`/categories/${g._id}`}
                                                                                 className="mega-link"
                                                                             >
-                                                                                {grand.name}
+                                                                                {g.name}
                                                                             </Link>
                                                                         </li>
                                                                     ))}
                                                                 </ul>
                                                             ) : (
                                                                 <Link
-                                                                    to={`/categories/${childCat._id}`}
+                                                                    to={`/categories/${c._id}`}
                                                                     className="mega-link see-all"
                                                                 >
                                                                     Shop All
@@ -314,7 +299,7 @@ const Navbar = ({ isAdmin = false }) => {
                         </form>
                         <button
                             className="search-toggle mobile-only"
-                            onClick={() => setSearchOpen(!searchOpen)}
+                            onClick={() => setSearchOpen((v) => !v)}
                             aria-label="Toggle search"
                         >
                             <FaSearch />
@@ -328,9 +313,15 @@ const Navbar = ({ isAdmin = false }) => {
                         <div className="dropdown-content">
                             {isLoggedIn ? (
                                 <>
-                                    <Link to="/account" className="dropdown-link">My Account</Link>
-                                    <Link to="/orders" className="dropdown-link">My Orders</Link>
-                                    <button onClick={handleLogout} className="dropdown-link">Logout</button>
+                                    <Link to="/account" className="dropdown-link">
+                                        My Account
+                                    </Link>
+                                    <Link to="/orders" className="dropdown-link">
+                                        My Orders
+                                    </Link>
+                                    <button onClick={handleLogout} className="dropdown-link">
+                                        Logout
+                                    </button>
                                 </>
                             ) : (
                                 <>
@@ -351,9 +342,11 @@ const Navbar = ({ isAdmin = false }) => {
                             {userRole && (
                                 <Link
                                     to={
-                                        userRole === 'admin' ? '/admin' :
-                                            userRole === 'store_owner' ? '/store-owner' :
-                                                '/store-member'
+                                        userRole === 'admin'
+                                            ? '/admin'
+                                            : userRole === 'store_owner'
+                                                ? '/store-owner'
+                                                : '/store-member'
                                     }
                                     className="dropdown-link dashboard-link"
                                 >
@@ -385,6 +378,4 @@ const Navbar = ({ isAdmin = false }) => {
             )}
         </header>
     );
-};
-
-export default Navbar;
+}
