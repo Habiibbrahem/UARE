@@ -73,7 +73,9 @@ export default function ProductsManagement() {
             setBreadcrumbs(computeBreadcrumbs(res.data));
         });
 
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     const computeBreadcrumbs = (categories) => {
@@ -91,12 +93,13 @@ export default function ProductsManagement() {
             const node = lookup[id];
             if (!node) return '';
 
-            if (!node.parentId) {
+            // Use 'parent' field instead of 'parentId'
+            if (!node.parent) {
                 memo[id] = node.name;
                 return memo[id];
             }
 
-            const parentPath = buildPath(node.parentId);
+            const parentPath = buildPath(node.parent);
             memo[id] = parentPath ? `${parentPath} › ${node.name}` : node.name;
             return memo[id];
         };
@@ -164,7 +167,7 @@ export default function ProductsManagement() {
             let res;
             if (current._id) {
                 res = await updateProduct(current._id, fd);
-                setProducts(ps => ps.map(p => p._id === current._id ? res.data : p));
+                setProducts(ps => ps.map(p => (p._id === current._id ? res.data : p)));
             } else {
                 res = await createProduct(fd);
                 setProducts(ps => [...ps, res.data]);
@@ -191,7 +194,11 @@ export default function ProductsManagement() {
         <Box className="dashboard-card">
             <Box className="dashboard-title">
                 <Typography variant="h5">Products Management</Typography>
-                <Button variant="contained" onClick={() => openForm()} className="dashboard-primary-button">
+                <Button
+                    variant="contained"
+                    onClick={() => openForm()}
+                    className="dashboard-primary-button"
+                >
                     Add Product
                 </Button>
             </Box>
@@ -221,59 +228,69 @@ export default function ProductsManagement() {
                                         No products found
                                     </TableCell>
                                 </TableRow>
-                            ) : products.map(p => (
-                                <TableRow key={p._id} className="dashboard-category-row">
-                                    <TableCell>{p.name}</TableCell>
-                                    <TableCell>{p.description || '-'}</TableCell>
-                                    <TableCell>
-                                        {p.image
-                                            ? <img
-                                                src={`${axiosInstance.defaults.baseURL}${p.image}`}
-                                                alt={p.name}
-                                                className="dashboard-image-preview"
-                                            />
-                                            : '-'}
-                                    </TableCell>
-                                    <TableCell>{`${p.price.toFixed(2)} TND`}</TableCell>
-                                    <TableCell>{p.quantity}</TableCell>
-                                    <TableCell>{breadcrumbs[p.categoryId?._id || p.categoryId] || '-'}</TableCell>
-                                    <TableCell align="right">
-                                        <Button
-                                            size="small"
-                                            onClick={() => openForm(p)}
-                                            className="dashboard-action-button edit"
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            size="small"
-                                            color="error"
-                                            onClick={() => remove(p._id)}
-                                            className="dashboard-action-button delete"
-                                        >
-                                            Delete
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                            ) : (
+                                products.map(p => (
+                                    <TableRow key={p._id} className="dashboard-category-row">
+                                        <TableCell>{p.name}</TableCell>
+                                        <TableCell>{p.description || '-'}</TableCell>
+                                        <TableCell>
+                                            {p.image ? (
+                                                <img
+                                                    src={`${axiosInstance.defaults.baseURL}${p.image}`}
+                                                    alt={p.name}
+                                                    className="dashboard-image-preview"
+                                                />
+                                            ) : (
+                                                '-'
+                                            )}
+                                        </TableCell>
+                                        <TableCell>{`${p.price.toFixed(2)} TND`}</TableCell>
+                                        <TableCell>{p.quantity}</TableCell>
+                                        <TableCell>{breadcrumbs[p.categoryId?._id || p.categoryId] || '-'}</TableCell>
+                                        <TableCell align="right">
+                                            <Button
+                                                size="small"
+                                                onClick={() => openForm(p)}
+                                                className="dashboard-action-button edit"
+                                            >
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                size="small"
+                                                color="error"
+                                                onClick={() => remove(p._id)}
+                                                className="dashboard-action-button delete"
+                                            >
+                                                Delete
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 </TableContainer>
             )}
 
             <Dialog open={dialogOpen} onClose={closeForm}>
-                <DialogTitle>{current?._id ? 'Edit Product' : 'Add Product'}</DialogTitle>
+                <DialogTitle>
+                    {current?._id ? 'Edit Product' : 'Add Product'}
+                </DialogTitle>
                 <DialogContent>
                     <Box className="dashboard-form-input">
                         <TextField
-                            fullWidth margin="dense" label="Name"
+                            fullWidth
+                            margin="dense"
+                            label="Name"
                             value={current?.name || ''}
                             onChange={e => setCurrent(c => ({ ...c, name: e.target.value }))}
                         />
                     </Box>
                     <Box className="dashboard-form-input">
                         <TextField
-                            fullWidth margin="dense" label="Description"
+                            fullWidth
+                            margin="dense"
+                            label="Description"
                             value={current?.description || ''}
                             onChange={e => setCurrent(c => ({ ...c, description: e.target.value }))}
                         />
@@ -296,14 +313,20 @@ export default function ProductsManagement() {
                     </Box>
                     <Box className="dashboard-form-input">
                         <TextField
-                            fullWidth margin="dense" type="number" label="Price"
+                            fullWidth
+                            margin="dense"
+                            type="number"
+                            label="Price"
                             value={current?.price || 0}
                             onChange={e => setCurrent(c => ({ ...c, price: +e.target.value }))}
                         />
                     </Box>
                     <Box className="dashboard-form-input">
                         <TextField
-                            fullWidth margin="dense" type="number" label="Quantity"
+                            fullWidth
+                            margin="dense"
+                            type="number"
+                            label="Quantity"
                             value={current?.quantity || 0}
                             onChange={e => setCurrent(c => ({ ...c, quantity: +e.target.value }))}
                         />
@@ -327,8 +350,12 @@ export default function ProductsManagement() {
                     </Box>
                 </DialogContent>
                 <DialogActions className="dashboard-dialog-actions">
-                    <Button onClick={closeForm} className="dashboard-secondary-button">Cancel</Button>
-                    <Button onClick={saveProduct} className="dashboard-primary-button">Save</Button>
+                    <Button onClick={closeForm} className="dashboard-secondary-button">
+                        Cancel
+                    </Button>
+                    <Button onClick={saveProduct} className="dashboard-primary-button">
+                        Save
+                    </Button>
                 </DialogActions>
             </Dialog>
 

@@ -1,4 +1,6 @@
+// src/pages/HomePage.jsx
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import ImageCarousel from '../components/ImageCarousel';
 import {
@@ -20,7 +22,6 @@ const HomePage = () => {
     const categories = [
         { name: "Chaussures, vêtements et accessoires", subtext: "Plus de catégories" },
         { name: "Mode, beauté, luxe et plus" },
-        // Removed hardcoded sub-subcategories here!
     ];
 
     const services = [
@@ -47,18 +48,16 @@ const HomePage = () => {
     ];
 
     useEffect(() => {
-        // Fetch all categories and filter sub-subcategories (depth = 2)
         const fetchCategories = async () => {
             try {
                 const res = await axios.get(`${API_BASE}/categories`);
-                const categories = res.data;
+                const cats = res.data;
 
-                // Filter sub-subcategories: categories with a parent that also has a parent
-                const subSubs = categories.filter(cat => {
+                // Only sub-subcategories (depth = 2)
+                const subSubs = cats.filter(cat => {
                     if (!cat.parent) return false;
-                    // Find parent category
-                    const parentCat = categories.find(c => c._id === cat.parent);
-                    return parentCat && parentCat.parent !== null;
+                    const parentCat = cats.find(c => c._id === cat.parent);
+                    return parentCat && parentCat.parent;
                 });
 
                 setSubSubCategories(subSubs);
@@ -75,24 +74,24 @@ const HomePage = () => {
             <Navbar />
             <main className="home-main">
                 <ImageCarousel />
+
                 <section className="categories-section">
                     <div className="categories-container">
-                        {categories.map((category, index) => (
+                        {categories.map((category, idx) =>
                             typeof category === 'object' ? (
-                                <div key={index} className="category-header">
+                                <div key={idx} className="category-header">
                                     <h3>{category.name}</h3>
                                     {category.subtext && <p>{category.subtext}</p>}
                                 </div>
                             ) : (
-                                <div key={index} className="category-item">
+                                <div key={idx} className="category-item">
                                     {category}
                                 </div>
                             )
-                        ))}
+                        )}
                     </div>
                 </section>
 
-                {/* New Sub-subcategories Section */}
                 <section className="subsubcategories-section">
                     <h2>Nos Articles</h2>
                     {subSubCategories.length === 0 ? (
@@ -100,17 +99,21 @@ const HomePage = () => {
                     ) : (
                         <ul>
                             {subSubCategories.map(cat => (
-                                <li key={cat._id}>{cat.name}</li>
+                                <li key={cat._id}>
+                                    <Link to={`/categories/${cat._id}`}>
+                                        {cat.name}
+                                    </Link>
+                                </li>
                             ))}
                         </ul>
                     )}
                 </section>
 
                 <section className="services-section">
-                    <div className="divider-line"></div>
+                    <div className="divider-line" />
                     <div className="services-container">
-                        {services.map((service, index) => (
-                            <div key={index} className="service-card">
+                        {services.map((service, idx) => (
+                            <div key={idx} className="service-card">
                                 <div className="service-icon-container">
                                     {service.icon}
                                 </div>

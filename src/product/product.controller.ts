@@ -72,6 +72,11 @@ export class ProductController {
   findAll() {
     return this.productService.findAll();
   }
+  /** Search by name or description (public) */
+  @Get('search')
+  search(@Query('q') q: string) {
+    return this.productService.search(q);
+  }
 
   /** Filter products by storeId/categoryId/minPrice/maxPrice (public) */
   @Get('search/filter')

@@ -5,6 +5,10 @@ import axiosInstance from './axiosInstance';
 export const getProductsByStore = (storeId) =>
     axiosInstance.get(`/products/store/${storeId}`);
 
+// Fetch products by category
+export const getProductsByCategory = (categoryId) =>
+    axiosInstance.get(`/products/category/${categoryId}`);   // ← new
+
 // Fetch a single product by its ID
 export const getProductById = (productId) =>
     axiosInstance.get(`/products/${productId}`);
@@ -24,3 +28,7 @@ export const updateProduct = (id, formData) =>
 // Delete a product by id
 export const deleteProduct = (id) =>
     axiosInstance.delete(`/products/${id}`);
+
+// Search products
+export const searchProducts = (q) =>
+    axiosInstance.get(`/products/search?q=${encodeURIComponent(q)}`);

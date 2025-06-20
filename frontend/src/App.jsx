@@ -3,6 +3,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 
+import SearchResultsPage from './pages/SearchResultsPage';
+import CategoryPage from './pages/CategoryPage';      // ← new
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import StorePage from './pages/StorePage';
@@ -17,8 +19,6 @@ import AdminDashboard from './components/dashboards/AdminDashboard';
 import AssignStoreOwner from './components/dashboards/AssignStoreOwner';
 import StoreMemberDashboard from './components/dashboards/StoreMemberDashboard';
 import Unauthorized from './components/dashboards/Unauthorized';
-
-// **Import your dashboard layout** from dashboards
 import StoreOwnerLayout from './components/dashboards/StoreOwnerLayout';
 import MembersManagement from './components/dashboards/MembersManagement';
 import OrdersManagement from './components/dashboards/OrdersManagement';
@@ -49,6 +49,8 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/search" element={<SearchResultsPage />} />
+            <Route path="/categories/:categoryId" element={<CategoryPage />} />  {/* ← new */}
             <Route path="/store/:storeId" element={<StorePage />} />
             <Route path="/product/:productId" element={<ProductPage />} />
             <Route path="/cart" element={<CartPage />} />
@@ -92,7 +94,6 @@ export default function App() {
                 </RequireAuth>
               }
             >
-              {/* default to members */}
               <Route index element={<Navigate to="members" replace />} />
               <Route path="members" element={<MembersManagement />} />
               <Route path="orders" element={<OrdersManagement />} />
