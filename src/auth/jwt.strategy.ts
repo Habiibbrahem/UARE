@@ -18,11 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
-    // Attach `userId` (not `_id`) so your controller-level
-    // “/users/me” can read `req.user.userId`
+    // Attach both "_id" and "userId" for compatibility
     async validate(payload: any) {
         return {
-            userId: payload.sub,
+            _id: payload.sub,         // For code that expects _id (like store.controller)
+            userId: payload.sub,      // For any code that expects userId
             email: payload.email,
             role: payload.role,
         };

@@ -123,6 +123,7 @@ export default function CategoriesManagement() {
 
     useEffect(() => {
         fetchCategories();
+        // eslint-disable-next-line
     }, []);
 
     useEffect(() => {
@@ -260,7 +261,17 @@ export default function CategoriesManagement() {
     };
 
     return (
-        <Box sx={{ p: 3 }} className="dashboard-card">
+        <Box
+            sx={{
+                width: '100%',
+                maxWidth: 1200,      // << Wide but not too wide. Adjust here (1100/1300/1400 etc)
+                minHeight: '100vh',
+                bgcolor: '#f9f9f9',
+                px: 3,               // << Some horizontal padding
+                py: 4,
+                mx: 'auto',          // << Center horizontally
+            }}
+        >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h5" sx={{ fontWeight: 'medium' }}>
                     Categories Management
@@ -294,8 +305,19 @@ export default function CategoriesManagement() {
                     No categories available.
                 </Typography>
             ) : (
-                <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
-                    <Table className="dashboard-table">
+                <TableContainer
+                    component={Paper}
+                    sx={{
+                        width: '100%',
+                        minWidth: 900,
+                        maxWidth: '100%',
+                        borderRadius: 2,
+                        boxShadow: 2,
+                        mx: 'auto',
+                        overflowX: 'auto',
+                    }}
+                >
+                    <Table className="dashboard-table" sx={{ minWidth: 900 }}>
                         <TableHead>
                             <TableRow sx={{ bgcolor: 'grey.100' }}>
                                 <TableCell>Name</TableCell>
