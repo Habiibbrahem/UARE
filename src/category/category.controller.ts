@@ -1,4 +1,3 @@
-// src/categories/category.controller.ts
 import {
     Controller,
     Get,
@@ -56,7 +55,7 @@ export class CategoryController {
 
     @Put(':id')
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @RequireRoles(Roles.ADMIN)
+    @RequireRoles(Roles.ADMIN, Roles.STORE_MEMBER) // <--- both can update
     update(
         @Param('id') id: string,
         @Body() updateCategoryDto: UpdateCategoryDto
@@ -66,7 +65,7 @@ export class CategoryController {
 
     @Delete(':id')
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @RequireRoles(Roles.ADMIN)
+    @RequireRoles(Roles.ADMIN, Roles.STORE_MEMBER) // <--- both can delete
     remove(@Param('id') id: string) {
         return this.categoryService.remove(id);
     }

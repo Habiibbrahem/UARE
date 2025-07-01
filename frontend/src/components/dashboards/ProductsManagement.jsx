@@ -76,6 +76,7 @@ export default function ProductsManagement() {
         return () => {
             cancelled = true;
         };
+        // eslint-disable-next-line
     }, []);
 
     const computeBreadcrumbs = (categories) => {
@@ -93,7 +94,6 @@ export default function ProductsManagement() {
             const node = lookup[id];
             if (!node) return '';
 
-            // Use 'parent' field instead of 'parentId'
             if (!node.parent) {
                 memo[id] = node.name;
                 return memo[id];
@@ -117,7 +117,18 @@ export default function ProductsManagement() {
 
     if (storeId === undefined) {
         return (
-            <Box className="dashboard-loading">
+            <Box sx={{
+                width: '100%',
+                maxWidth: 1200,
+                minHeight: '100vh',
+                bgcolor: '#f9f9f9',
+                px: 3,
+                py: 4,
+                mx: 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
                 <CircularProgress />
             </Box>
         );
@@ -125,9 +136,22 @@ export default function ProductsManagement() {
 
     if (storeId === null) {
         return (
-            <Typography className="dashboard-error-message" align="center">
-                You do not have access to a store.
-            </Typography>
+            <Box sx={{
+                width: '100%',
+                maxWidth: 1200,
+                minHeight: '100vh',
+                bgcolor: '#f9f9f9',
+                px: 3,
+                py: 4,
+                mx: 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                <Typography align="center">
+                    You do not have access to a store.
+                </Typography>
+            </Box>
         );
     }
 
@@ -138,7 +162,7 @@ export default function ProductsManagement() {
             description: prod?.description || '',
             price: prod?.price || 0,
             quantity: prod?.quantity || 0,
-            categoryId: prod?.categoryId?._id || '',
+            categoryId: prod?.categoryId?._id || prod?.categoryId || '',
             storeId,
             imageFile: null,
             existingImage: prod?.image,
@@ -191,8 +215,23 @@ export default function ProductsManagement() {
     };
 
     return (
-        <Box className="dashboard-card">
-            <Box className="dashboard-title">
+        <Box
+            sx={{
+                width: '100%',
+                maxWidth: 1200,
+                minHeight: '100vh',
+                bgcolor: '#f9f9f9',
+                px: 3,
+                py: 4,
+                mx: 'auto',
+            }}
+        >
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 3,
+            }}>
                 <Typography variant="h5">Products Management</Typography>
                 <Button
                     variant="contained"
@@ -204,11 +243,22 @@ export default function ProductsManagement() {
             </Box>
 
             {loading ? (
-                <Box className="dashboard-loading">
+                <Box sx={{ textAlign: 'center', py: 4 }}>
                     <CircularProgress />
                 </Box>
             ) : (
-                <TableContainer component={Paper} sx={{ width: '100%', overflowX: 'auto' }}>
+                <TableContainer
+                    component={Paper}
+                    sx={{
+                        width: '100%',
+                        minWidth: 900,
+                        maxWidth: '100%',
+                        borderRadius: 2,
+                        boxShadow: 2,
+                        mx: 'auto',
+                        overflowX: 'auto',
+                    }}
+                >
                     <Table className="dashboard-table" sx={{ minWidth: 1000 }}>
                         <TableHead>
                             <TableRow>
@@ -246,7 +296,9 @@ export default function ProductsManagement() {
                                         </TableCell>
                                         <TableCell>{`${p.price.toFixed(2)} TND`}</TableCell>
                                         <TableCell>{p.quantity}</TableCell>
-                                        <TableCell>{breadcrumbs[p.categoryId?._id || p.categoryId] || '-'}</TableCell>
+                                        <TableCell>
+                                            {breadcrumbs[p.categoryId?._id || p.categoryId] || '-'}
+                                        </TableCell>
                                         <TableCell align="right">
                                             <Button
                                                 size="small"
