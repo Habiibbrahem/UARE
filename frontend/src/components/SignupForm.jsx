@@ -1,3 +1,4 @@
+// src/components/SignupForm.jsx
 import React, { useState } from 'react';
 import { FaLock, FaGoogle } from 'react-icons/fa';
 import { FiMail, FiUser } from 'react-icons/fi';
@@ -24,10 +25,11 @@ const SignupForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
         setIsLoading(true);
 
         if (formData.password !== formData.confirmPassword) {
-            setError("Passwords don't match");
+            setError('Les mots de passe ne correspondent pas');
             setIsLoading(false);
             return;
         }
@@ -47,15 +49,15 @@ const SignupForm = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Registration failed');
+                throw new Error(data.message || "Échec de l'inscription");
             }
 
-            setSuccess('Account created successfully! Redirecting to login...');
+            setSuccess('Compte créé avec succès ! Redirection vers la connexion...');
             setTimeout(() => {
                 navigate('/login');
             }, 2000);
         } catch (err) {
-            setError(err.message || 'Registration failed. Please try again.');
+            setError(err.message || "Échec de l'inscription. Veuillez réessayer.");
         } finally {
             setIsLoading(false);
         }
@@ -69,17 +71,16 @@ const SignupForm = () => {
         <div className="auth-container">
             <div className="auth-image-section">
                 <div className="auth-image-content">
-                    <h1 className="auth-image-title">Join Us</h1>
+                    <h1 className="auth-image-title">Rejoignez-nous</h1>
                     <p className="auth-image-subtitle">
-                        🌟 Join Our Community
-                        <br />Create your free account to:
-                        <br />✓ Get personalized recommendations
-                        <br />✓ Save your wishlists & order history
-                        ✓ Enjoy faster checkout & exclusive deals                      </p>
+                        🌟 Rejoignez notre communauté<br />
+                        Créez votre compte gratuit pour :
+                        <br />✓ Recevoir des recommandations personnalisées
+                        <br />✓ Sauvegarder vos listes de souhaits et historique de commandes
+                        <br />✓ Profiter d’un paiement plus rapide et d’offres exclusives
+                    </p>
                     <p className="auth-image-tagline">
-                        "Your perfect finds are just an account away"
-
-
+                        « Vos trouvailles parfaites sont à un compte près »
                     </p>
                 </div>
             </div>
@@ -87,8 +88,10 @@ const SignupForm = () => {
             <div className="auth-form-section">
                 <div className="auth-form-container">
                     <div className="auth-header">
-                        <h2 className="auth-title">Create Account</h2>
-                        <p className="auth-subtitle">Fill in your details to get started</p>
+                        <h2 className="auth-title">Créer un compte</h2>
+                        <p className="auth-subtitle">
+                            Remplissez vos informations pour commencer
+                        </p>
                     </div>
 
                     {error && <div className="auth-message error-message">{error}</div>}
@@ -100,7 +103,7 @@ const SignupForm = () => {
                             <input
                                 type="text"
                                 className="form-input"
-                                placeholder="Full Name"
+                                placeholder="Nom complet"
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
@@ -113,7 +116,7 @@ const SignupForm = () => {
                             <input
                                 type="email"
                                 className="form-input"
-                                placeholder="Email Address"
+                                placeholder="Adresse e-mail"
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
@@ -126,7 +129,7 @@ const SignupForm = () => {
                             <input
                                 type="password"
                                 className="form-input"
-                                placeholder="Password (min 6 characters)"
+                                placeholder="Mot de passe (min 6 caractères)"
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
@@ -140,7 +143,7 @@ const SignupForm = () => {
                             <input
                                 type="password"
                                 className="form-input"
-                                placeholder="Confirm Password"
+                                placeholder="Confirmez le mot de passe"
                                 name="confirmPassword"
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
@@ -153,27 +156,27 @@ const SignupForm = () => {
                             className="auth-button primary-button"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Creating account...' : 'Sign Up'}
+                            {isLoading ? 'Création en cours...' : 'S’inscrire'}
                         </button>
 
-                        <div className="auth-divider">or</div>
+                        <div className="auth-divider">ou</div>
 
                         <button
                             type="button"
                             className="auth-button secondary-button"
                         >
                             <FaGoogle style={{ marginRight: '8px' }} />
-                            Continue with Google
+                            Continuer avec Google
                         </button>
 
                         <div className="auth-footer">
-                            Already have an account?{' '}
+                            Vous avez déjà un compte ?{' '}
                             <button
                                 type="button"
                                 className="auth-link"
                                 onClick={handleLoginClick}
                             >
-                                Sign in
+                                Connexion
                             </button>
                         </div>
                     </form>

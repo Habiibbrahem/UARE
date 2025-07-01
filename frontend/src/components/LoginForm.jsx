@@ -1,5 +1,6 @@
+// src/components/LoginForm.jsx
 import React, { useState } from 'react';
-import { FaUser, FaLock, FaGoogle } from 'react-icons/fa';
+import { FaLock, FaGoogle } from 'react-icons/fa';
 import { FiMail } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import '../styles/authForms.css';
@@ -26,14 +27,14 @@ const LoginForm = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Login failed');
+                throw new Error(data.message || 'Échec de la connexion');
             }
 
             localStorage.setItem('token', data.access_token);
             navigate('/');
             window.location.reload();
         } catch (err) {
-            setError(err.message || 'Invalid email or password');
+            setError(err.message || "E-mail ou mot de passe invalide");
         } finally {
             setIsLoading(false);
         }
@@ -47,27 +48,26 @@ const LoginForm = () => {
         <div className="auth-container">
             <div className="auth-image-section">
                 <div className="auth-image-content">
-                    <h1 className="auth-image-title">Welcome Back To UARE COLLECTION</h1>
+                    <h1 className="auth-image-title">Bon retour sur UARE COLLECTION</h1>
                     <p className="auth-image-subtitle">
-                        🔑 Login to Your Account
-                        <br />
-
-                        Track orders & manage purchases
-                        <br />
-                        Save favorites for later
-                        <br />
-                        Enjoy personalized recommendations
+                        🔑 Connectez-vous à votre compte<br />
+                        Suivez vos commandes & gérez vos achats<br />
+                        Enregistrez vos favoris pour plus tard<br />
+                        Profitez de recommandations personnalisées
                     </p>
                     <p className="auth-image-tagline">
-                        "Every purchase tells your story"                   </p>
+                        « Chaque achat raconte votre histoire »
+                    </p>
                 </div>
             </div>
 
             <div className="auth-form-section">
                 <div className="auth-form-container">
                     <div className="auth-header">
-                        <h2 className="auth-title">Sign In</h2>
-                        <p className="auth-subtitle">Enter your credentials to access your account</p>
+                        <h2 className="auth-title">Connexion</h2>
+                        <p className="auth-subtitle">
+                            Entrez vos identifiants pour accéder à votre compte
+                        </p>
                     </div>
 
                     {error && <div className="auth-message error-message">{error}</div>}
@@ -78,7 +78,7 @@ const LoginForm = () => {
                             <input
                                 type="email"
                                 className="form-input"
-                                placeholder="Email Address"
+                                placeholder="Adresse e-mail"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -90,7 +90,7 @@ const LoginForm = () => {
                             <input
                                 type="password"
                                 className="form-input"
-                                placeholder="Password"
+                                placeholder="Mot de passe"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -100,10 +100,10 @@ const LoginForm = () => {
                         <div className="form-options">
                             <label className="remember-me">
                                 <input type="checkbox" />
-                                <span>Remember me</span>
+                                <span>Se souvenir de moi</span>
                             </label>
                             <button type="button" className="forgot-password">
-                                Forgot password?
+                                Mot de passe oublié&nbsp;?
                             </button>
                         </div>
 
@@ -112,27 +112,27 @@ const LoginForm = () => {
                             className="auth-button primary-button"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Logging in...' : 'Sign In'}
+                            {isLoading ? 'Connexion en cours...' : 'Connexion'}
                         </button>
 
-                        <div className="auth-divider">or</div>
+                        <div className="auth-divider">ou</div>
 
                         <button
                             type="button"
                             className="auth-button secondary-button"
                         >
                             <FaGoogle style={{ marginRight: '8px' }} />
-                            Continue with Google
+                            Continuer avec Google
                         </button>
 
                         <div className="auth-footer">
-                            Don't have an account?{' '}
+                            Vous n’avez pas de compte&nbsp;?{' '}
                             <button
                                 type="button"
                                 className="auth-link"
                                 onClick={handleSignupClick}
                             >
-                                Sign up
+                                Inscription
                             </button>
                         </div>
                     </form>

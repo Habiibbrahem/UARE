@@ -1,3 +1,4 @@
+// src/pages/ProductPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
@@ -21,6 +22,7 @@ import {
     ListItem,
     ListItemText,
     Grid,
+    Container
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ShoppingCart, Favorite, Share, ExpandMore } from '@mui/icons-material';
@@ -28,7 +30,7 @@ import { ShoppingCart, Favorite, Share, ExpandMore } from '@mui/icons-material';
 import axiosInstance from '../services/axiosInstance';
 import {
     getProductById,
-    getProductRecommendations,
+    getProductRecommendations
 } from '../services/productService';
 import useCartStore from '../store/useCartStore';
 
@@ -36,29 +38,29 @@ import useCartStore from '../store/useCartStore';
 const PageContainer = styled(Box)(({ theme }) => ({
     paddingTop: theme.spacing(12),
     paddingBottom: theme.spacing(6),
-    backgroundColor: theme.palette.background.default,
+    backgroundColor: theme.palette.background.default
 }));
-const ProductContainer = styled(Box)(({ theme }) => ({
+const ProductContainer = styled(Container)(({ theme }) => ({
     maxWidth: 1400,
     margin: '0 auto',
     padding: theme.spacing(4),
     backgroundColor: theme.palette.background.paper,
     borderRadius: theme.shape.borderRadius * 2,
-    boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
+    boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)'
 }));
 const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
     marginBottom: theme.spacing(3),
     '& a': {
         textDecoration: 'none',
         color: theme.palette.primary.main,
-        '&:hover': { textDecoration: 'underline' },
-    },
+        '&:hover': { textDecoration: 'underline' }
+    }
 }));
 const ProductGrid = styled('div')(({ theme }) => ({
     display: 'grid',
     gridTemplateColumns: '1.2fr 1fr',
     gap: theme.spacing(6),
-    [theme.breakpoints.down('lg')]: { gridTemplateColumns: '1fr', gap: theme.spacing(4) },
+    [theme.breakpoints.down('lg')]: { gridTemplateColumns: '1fr', gap: theme.spacing(4) }
 }));
 const ImageCard = styled(Card)(({ theme }) => ({
     borderRadius: theme.shape.borderRadius * 3,
@@ -66,18 +68,18 @@ const ImageCard = styled(Card)(({ theme }) => ({
     border: `1px solid ${theme.palette.divider}`,
     overflow: 'hidden',
     transition: 'transform 0.3s ease',
-    '&:hover': { transform: 'scale(1.02)' },
+    '&:hover': { transform: 'scale(1.02)' }
 }));
 const ProductImage = styled(CardMedia)(() => ({
     width: '100%',
     height: 500,
     objectFit: 'contain',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f9f9f9'
 }));
 const ThumbnailContainer = styled(Box)(({ theme }) => ({
     display: 'flex',
     gap: theme.spacing(2),
-    marginTop: theme.spacing(2),
+    marginTop: theme.spacing(2)
 }));
 const Thumbnail = styled('img')(({ theme, selected }) => ({
     width: 60,
@@ -88,19 +90,19 @@ const Thumbnail = styled('img')(({ theme, selected }) => ({
     border: selected ? `2px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
     opacity: selected ? 1 : 0.7,
     transition: 'all 0.2s ease',
-    '&:hover': { opacity: 1 },
+    '&:hover': { opacity: 1 }
 }));
 const DetailSection = styled(Box)(({ theme }) => ({
     display: 'flex',
     flexDirection: 'column',
-    gap: theme.spacing(3),
+    gap: theme.spacing(3)
 }));
 const ProductTitle = styled(Typography)(({ theme }) => ({
     fontWeight: 700,
     lineHeight: 1.2,
     marginBottom: theme.spacing(2),
     fontSize: '2rem',
-    [theme.breakpoints.down('sm')]: { fontSize: '1.5rem' },
+    [theme.breakpoints.down('sm')]: { fontSize: '1.5rem' }
 }));
 const SectionTitle = styled(Typography)(({ theme }) => ({
     fontWeight: 600,
@@ -108,22 +110,22 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
     marginBottom: theme.spacing(1),
     textTransform: 'uppercase',
     letterSpacing: 1,
-    fontSize: '0.85rem',
+    fontSize: '0.85rem'
 }));
 const ProductDescription = styled(Typography)(({ theme }) => ({
     color: theme.palette.text.secondary,
     lineHeight: 1.7,
-    marginBottom: theme.spacing(3),
+    marginBottom: theme.spacing(3)
 }));
 const PriceBox = styled(Box)(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(1.5),
-    marginBottom: theme.spacing(1),
+    marginBottom: theme.spacing(1)
 }));
 const OriginalPrice = styled(Typography)(({ theme }) => ({
     textDecoration: 'line-through',
-    color: theme.palette.text.disabled,
+    color: theme.palette.text.disabled
 }));
 const VariantSection = styled(Box)(({ theme }) => ({
     marginBottom: theme.spacing(3),
@@ -133,42 +135,26 @@ const VariantSection = styled(Box)(({ theme }) => ({
         borderRadius: theme.shape.borderRadius,
         fontWeight: 500,
         marginRight: theme.spacing(1),
-        marginBottom: theme.spacing(1),
+        marginBottom: theme.spacing(1)
     },
-    '& .MuiChip-root:hover': { transform: 'translateY(-2px)', boxShadow: theme.shadows[1] },
-    '& .MuiChip-filled': { backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText },
+    '& .MuiChip-filled': { backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }
 }));
 const QuantityField = styled(TextField)(({ theme }) => ({
     maxWidth: 100,
-    '& .MuiOutlinedInput-root': { borderRadius: theme.shape.borderRadius * 2 },
+    '& .MuiOutlinedInput-root': { borderRadius: theme.shape.borderRadius * 2 }
 }));
 const ActionsBox = styled(Box)(({ theme }) => ({
     display: 'flex',
     gap: theme.spacing(2),
     alignItems: 'center',
-    marginTop: theme.spacing(3),
-    '& .MuiButton-root': {
-        padding: theme.spacing(1.5, 3),
-        borderRadius: theme.shape.borderRadius * 2,
-        textTransform: 'none',
-        fontWeight: 600,
-        letterSpacing: 0.5,
-        boxShadow: 'none',
-        '&:hover': { boxShadow: theme.shadows[2], transform: 'translateY(-2px)' },
-        '&:active': { transform: 'translateY(0)' },
-    },
-    '& .MuiIconButton-root': {
-        border: `1px solid ${theme.palette.divider}`,
-        transition: 'all 0.2s ease',
-        '&:hover': { backgroundColor: theme.palette.action.hover, transform: 'scale(1.1)' },
-    },
+    marginTop: theme.spacing(3)
 }));
 const RecommendationsBox = styled(Box)(({ theme }) => ({
     marginTop: theme.spacing(8),
     backgroundColor: theme.palette.background.paper,
     borderRadius: theme.shape.borderRadius * 2,
     padding: theme.spacing(4),
-    boxShadow: '0px 2px 12px rgba(0,0,0,0.04)',
+    boxShadow: '0px 2px 12px rgba(0,0,0,0.04)'
 }));
 const RecommendationCard = styled(Card)(({ theme }) => ({
     borderRadius: theme.shape.borderRadius * 2,
@@ -177,15 +163,14 @@ const RecommendationCard = styled(Card)(({ theme }) => ({
     transition: 'transform 0.2s',
     '&:hover': { transform: 'scale(1.03)' },
     padding: theme.spacing(1.5, 1, 2),
-    height: '100%',
+    height: '100%'
 }));
-
 const RecentlyBox = styled(Box)(({ theme }) => ({
     marginTop: theme.spacing(5),
     backgroundColor: theme.palette.background.paper,
     borderRadius: theme.shape.borderRadius * 2,
     padding: theme.spacing(4),
-    boxShadow: '0px 1px 8px rgba(0,0,0,0.025)',
+    boxShadow: '0px 1px 8px rgba(0,0,0,0.025)'
 }));
 
 export default function ProductPage() {
@@ -203,7 +188,7 @@ export default function ProductPage() {
     const [mainImage, setMainImage] = useState('');
     const addToCart = useCartStore((state) => state.addToCart);
 
-    // Util for localStorage management
+    // Gestion des produits récemment consultés
     const RECENT_KEY = 'recently_viewed_products';
     function addToRecentlyViewed(id) {
         let arr = [];
@@ -212,8 +197,8 @@ export default function ProductPage() {
         } catch {
             arr = [];
         }
-        arr = arr.filter(pid => pid !== id); // remove if already present
-        arr.unshift(id); // add to front
+        arr = arr.filter(pid => pid !== id);
+        arr.unshift(id);
         if (arr.length > 12) arr = arr.slice(0, 12);
         localStorage.setItem(RECENT_KEY, JSON.stringify(arr));
     }
@@ -231,7 +216,6 @@ export default function ProductPage() {
         setError(null);
         setRecommendations([]);
         setRecentProducts([]);
-        // Add to recently viewed
         addToRecentlyViewed(productId);
 
         getProductById(productId)
@@ -245,11 +229,10 @@ export default function ProductPage() {
                     .then(r => setRecommendations(r.data))
                     .finally(() => setRecLoading(false));
             })
-            .catch((err) => setError(err.message || 'Failed to load product'))
+            .catch((err) => setError(err.message || 'Échec du chargement du produit'))
             .finally(() => setLoading(false));
     }, [productId]);
 
-    // Fetch recently viewed products data
     useEffect(() => {
         setRecentLoading(true);
         const ids = getRecentlyViewedExceptCurrent(productId);
@@ -258,11 +241,9 @@ export default function ProductPage() {
             setRecentLoading(false);
             return;
         }
-        // Fetch all by Promise.all
         Promise.all(ids.map(id => getProductById(id).then(r => r.data).catch(() => null)))
             .then(resArr => setRecentProducts(resArr.filter(x => !!x)))
             .finally(() => setRecentLoading(false));
-        // eslint-disable-next-line
     }, [productId]);
 
     if (loading) return (
@@ -284,7 +265,7 @@ export default function ProductPage() {
     if (!product) return (
         <PageContainer>
             <Alert severity="warning" sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-                Product not found
+                Produit introuvable
             </Alert>
         </PageContainer>
     );
@@ -292,7 +273,7 @@ export default function ProductPage() {
     const handleAddToCart = () => addToCart({
         productId: product._id,
         name: product.name,
-        price: product.price,
+        price: product.discount ? (product.price * (1 - product.discount / 100)) : product.price,
         image: product.image,
         quantity: Number(quantity),
         color: selectedColor,
@@ -306,8 +287,8 @@ export default function ProductPage() {
         <PageContainer>
             <ProductContainer>
                 <StyledBreadcrumbs aria-label="breadcrumb">
-                    <Link to="/">Home</Link>
-                    <Link to={`/store/${product.storeId}`}>Store</Link>
+                    <Link to="/">Accueil</Link>
+                    <Link to={`/store/${product.storeId}`}>Boutique</Link>
                     <Typography color="text.primary">{product.name}</Typography>
                 </StyledBreadcrumbs>
 
@@ -340,33 +321,33 @@ export default function ProductPage() {
                         <Box display="flex" alignItems="center" gap={1} mb={2}>
                             <Rating value={product.rating || 0} precision={0.5} readOnly />
                             <Typography variant="body2" color="text.secondary">
-                                ({product.reviewCount || 0} reviews)
+                                ({product.reviewCount || 0} avis)
                             </Typography>
                         </Box>
 
                         {product.discount ? (
                             <PriceBox>
                                 <Typography variant="h4" color="primary">
-                                    {`${(product.price * (1 - product.discount / 100)).toFixed(2)} TND`}
+                                    {(product.price * (1 - product.discount / 100)).toFixed(2)} TND
                                 </Typography>
                                 <OriginalPrice variant="body1">
-                                    {`${product.price.toFixed(2)} TND`}
+                                    {product.price.toFixed(2)} TND
                                 </OriginalPrice>
-                                <Chip label={`${product.discount}% OFF`} color="error" size="small" />
+                                <Chip label={`${product.discount}% de réduction`} color="error" size="small" />
                             </PriceBox>
                         ) : (
                             <Typography variant="h4" color="primary">
-                                {`${product.price.toFixed(2)} TND`}
+                                {product.price.toFixed(2)} TND
                             </Typography>
                         )}
 
                         {product.quantity > 0 ? (
                             <Typography variant="body2" color="success.main">
-                                In Stock ({product.quantity} available)
+                                En stock ({product.quantity} disponibles)
                             </Typography>
                         ) : (
                             <Typography variant="body2" color="error">
-                                Out of Stock
+                                Rupture de stock
                             </Typography>
                         )}
 
@@ -377,7 +358,7 @@ export default function ProductPage() {
 
                         {product.colors?.length > 0 && (
                             <VariantSection>
-                                <SectionTitle>Color</SectionTitle>
+                                <SectionTitle>Couleur</SectionTitle>
                                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                                     {product.colors.map(c => (
                                         <Chip
@@ -394,7 +375,7 @@ export default function ProductPage() {
 
                         {product.sizes?.length > 0 && (
                             <VariantSection>
-                                <SectionTitle>Size</SectionTitle>
+                                <SectionTitle>Taille</SectionTitle>
                                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                                     {product.sizes.map(s => (
                                         <Chip
@@ -410,7 +391,7 @@ export default function ProductPage() {
                         )}
 
                         <VariantSection>
-                            <SectionTitle>Quantity</SectionTitle>
+                            <SectionTitle>Quantité</SectionTitle>
                             <QuantityField
                                 type="number"
                                 value={quantity}
@@ -429,32 +410,32 @@ export default function ProductPage() {
                                 onClick={handleAddToCart}
                                 disabled={product.quantity <= 0}
                             >
-                                Add to Cart
+                                Ajouter au panier
                             </Button>
-                            <IconButton aria-label="add to favorites">
+                            <IconButton aria-label="Ajouter aux favoris">
                                 <Favorite />
                             </IconButton>
-                            <IconButton aria-label="share">
+                            <IconButton aria-label="Partager">
                                 <Share />
                             </IconButton>
                         </ActionsBox>
 
                         <Accordion elevation={0}>
                             <AccordionSummary expandIcon={<ExpandMore />}>
-                                <Typography fontWeight="500">Product Details</Typography>
+                                <Typography fontWeight="500">Détails du produit</Typography>
                             </AccordionSummary>
                             <AccordionDetails>
                                 <Typography paragraph>
-                                    {product.longDescription || 'No additional details available.'}
+                                    {product.longDescription || 'Aucun détail supplémentaire disponible.'}
                                 </Typography>
                                 {product.specifications?.length > 0 && (
                                     <>
                                         <Divider sx={{ my: 2 }} />
-                                        <Typography variant="subtitle2">Specifications</Typography>
+                                        <Typography variant="subtitle2" gutterBottom>Spécifications</Typography>
                                         <List dense>
                                             {product.specifications.map((spec, i) => (
                                                 <ListItem key={i}>
-                                                    <ListItemText primary={`${spec.name}: ${spec.value}`} />
+                                                    <ListItemText primary={`${spec.name} : ${spec.value}`} />
                                                 </ListItem>
                                             ))}
                                         </List>
@@ -465,10 +446,10 @@ export default function ProductPage() {
                     </DetailSection>
                 </ProductGrid>
 
-                {/* --- RECOMMENDATION SECTION --- */}
+                {/* --- SECTION RECOMMANDATIONS --- */}
                 <RecommendationsBox>
                     <Typography variant="h5" fontWeight="700" mb={3}>
-                        You may also like
+                        Vous aimerez aussi
                     </Typography>
                     {recLoading ? (
                         <Grid container spacing={2}>
@@ -479,24 +460,28 @@ export default function ProductPage() {
                             ))}
                         </Grid>
                     ) : recommendations.length === 0 ? (
-                        <Typography color="text.secondary">No recommendations available.</Typography>
+                        <Typography color="text.secondary">Aucune recommandation disponible.</Typography>
                     ) : (
                         <Grid container spacing={3}>
-                            {recommendations.map((rec) => (
+                            {recommendations.map(rec => (
                                 <Grid item xs={12} sm={6} md={3} key={rec._id}>
                                     <RecommendationCard>
                                         <Link to={`/product/${rec._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                                             <CardMedia
                                                 component="img"
                                                 height="160"
-                                                image={rec.image ? `${axiosInstance.defaults.baseURL}${rec.image}` : '/no-image.png'}
+                                                image={
+                                                    rec.image
+                                                        ? `${axiosInstance.defaults.baseURL}${rec.image}`
+                                                        : '/no-image.png'
+                                                }
                                                 alt={rec.name}
                                                 style={{ objectFit: 'contain', background: '#fafbfc' }}
                                             />
-                                            <Typography variant="subtitle1" fontWeight="600" mt={1}>
+                                            <Typography variant="subtitle1" fontWeight="600" mt={1} noWrap>
                                                 {rec.name}
                                             </Typography>
-                                            <Typography variant="body2" color="text.secondary" mb={1}>
+                                            <Typography variant="body2" color="text.secondary" mb={1} noWrap>
                                                 {rec.categoryId?.name || ''}
                                             </Typography>
                                             <Typography variant="h6" color="primary">
@@ -510,10 +495,10 @@ export default function ProductPage() {
                     )}
                 </RecommendationsBox>
 
-                {/* --- RECENTLY VIEWED SECTION --- */}
+                {/* --- SECTION PRODUITS RECEMMENT CONSULTES --- */}
                 <RecentlyBox>
                     <Typography variant="h6" fontWeight="700" mb={3}>
-                        Recently Viewed Products
+                        Produits récemment consultés
                     </Typography>
                     {recentLoading ? (
                         <Grid container spacing={2}>
@@ -524,24 +509,28 @@ export default function ProductPage() {
                             ))}
                         </Grid>
                     ) : recentProducts.length === 0 ? (
-                        <Typography color="text.secondary">No recently viewed products.</Typography>
+                        <Typography color="text.secondary">Aucun produit récemment consulté.</Typography>
                     ) : (
                         <Grid container spacing={3}>
-                            {recentProducts.map((rec) => (
+                            {recentProducts.map(rec => (
                                 <Grid item xs={12} sm={6} md={3} key={rec._id}>
                                     <RecommendationCard>
                                         <Link to={`/product/${rec._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                                             <CardMedia
                                                 component="img"
                                                 height="120"
-                                                image={rec.image ? `${axiosInstance.defaults.baseURL}${rec.image}` : '/no-image.png'}
+                                                image={
+                                                    rec.image
+                                                        ? `${axiosInstance.defaults.baseURL}${rec.image}`
+                                                        : '/no-image.png'
+                                                }
                                                 alt={rec.name}
                                                 style={{ objectFit: 'contain', background: '#fafbfc' }}
                                             />
-                                            <Typography variant="subtitle1" fontWeight="600" mt={1}>
+                                            <Typography variant="subtitle1" fontWeight="600" mt={1} noWrap>
                                                 {rec.name}
                                             </Typography>
-                                            <Typography variant="body2" color="text.secondary" mb={1}>
+                                            <Typography variant="body2" color="text.secondary" mb={1} noWrap>
                                                 {rec.categoryId?.name || ''}
                                             </Typography>
                                             <Typography variant="h6" color="primary">

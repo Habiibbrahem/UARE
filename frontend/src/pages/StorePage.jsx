@@ -1,6 +1,6 @@
 // src/pages/StorePage.jsx
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
     Box,
     CircularProgress,
@@ -9,12 +9,9 @@ import {
     Button,
     TextField,
     MenuItem,
-    Paper,
-    Divider,
-    IconButton,
-    Badge
+    Paper
 } from '@mui/material';
-import { FilterList, Search, Sort, ShoppingCart } from '@mui/icons-material';
+import { FilterList, Search, Sort } from '@mui/icons-material';
 import axiosInstance from '../services/axiosInstance';
 import { getStoreById, getProductsByStore } from '../services/storeService';
 import ProductCard from '../components/ProductCard';
@@ -27,12 +24,6 @@ export default function StorePage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState('newest');
-    const [activeFilters, setActiveFilters] = useState({
-        category: '',
-        priceRange: '',
-        availability: true
-    });
-    const totalItems = useCartStore((state) => state.getTotalCount());
 
     useEffect(() => {
         setLoading(true);
@@ -48,80 +39,79 @@ export default function StorePage() {
     }, [storeId]);
 
     const filteredProducts = products.filter(product => {
-        // Search filter
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch =
+            product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             product.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-        // Category filter
-        const matchesCategory = !activeFilters.category ||
-            product.categoryId === activeFilters.category;
-
-        // Price range filter (example)
-        const matchesPrice = !activeFilters.priceRange || (
-            activeFilters.priceRange === 'under50' && product.price < 50 ||
-            activeFilters.priceRange === '50to100' && product.price >= 50 && product.price <= 100 ||
-            activeFilters.priceRange === 'over100' && product.price > 100
-        );
-
-        return matchesSearch && matchesCategory && matchesPrice;
+        return matchesSearch;
     });
 
     const sortedProducts = [...filteredProducts].sort((a, b) => {
         switch (sortOption) {
-            case 'priceLowHigh': return a.price - b.price;
-            case 'priceHighLow': return b.price - a.price;
-            case 'newest': return new Date(b.createdAt) - new Date(a.createdAt);
-            case 'popular': return (b.views || 0) - (a.views || 0);
-            default: return 0;
+            case 'priceLowHigh':
+                return a.price - b.price;
+            case 'priceHighLow':
+                return b.price - a.price;
+            case 'newest':
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            case 'popular':
+                return (b.views || 0) - (a.views || 0);
+            default:
+                return 0;
         }
     });
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" mt={4}>
+            <Box display="flex" justifyContent="center" mt={12}>
                 <CircularProgress />
             </Box>
         );
     }
 
     if (!store) {
-        return <Typography color="error">Store not found.</Typography>;
+        return (
+            <Typography color="error" sx={{ mt: 12, textAlign: 'center' }}>
+                Boutique introuvable.
+            </Typography>
+        );
     }
 
     return (
-        <Box sx={{ p: 3 }}>
-            {/* Store Header */}
+        <Box sx={{ p: 3, pt: 12, backgroundColor: 'grey.100', minHeight: '100vh' }}>
+            {/* En-tête de la boutique */}
             <Box sx={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'center',
                 alignItems: 'center',
                 mb: 4,
                 flexWrap: 'wrap',
                 gap: 2
             }}>
-                <Typography variant="h4">{store.name}</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <IconButton component={Link} to="/cart" color="inherit">
-                        <Badge badgeContent={totalItems} color="error">
-                            <ShoppingCart />
-                        </Badge>
-                    </IconButton>
-                </Box>
+                <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{
+                        fontWeight: 800,
+                        background: 'linear-gradient(90deg, #ff8e53 30%, #fe6b8b 90%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        fontSize: { xs: '2rem', md: '2.5rem' }
+                    }}
+                >
+                    {store.name}
+                </Typography>
             </Box>
 
-            {/* Filters and Search */}
-            <Paper elevation={0} sx={{
-                p: 3,
-                mb: 4,
-                border: '1px solid #eee',
-                borderRadius: '12px'
-            }}>
-                <Grid container spacing={3}>
+            {/* Recherche et filtres */}
+            <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+                <Grid container spacing={3} alignItems="center">
                     <Grid item xs={12} md={4}>
                         <TextField
                             fullWidth
                             variant="outlined"
-                            placeholder="Search products..."
+                            placeholder="Rechercher des produits"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             InputProps={{
@@ -133,17 +123,17 @@ export default function StorePage() {
                         <TextField
                             select
                             fullWidth
-                            label="Sort by"
+                            label="Trier par"
                             value={sortOption}
                             onChange={(e) => setSortOption(e.target.value)}
                             InputProps={{
                                 startAdornment: <Sort sx={{ mr: 1, color: 'text.disabled' }} />
                             }}
                         >
-                            <MenuItem value="newest">Newest</MenuItem>
-                            <MenuItem value="priceLowHigh">Price: Low to High</MenuItem>
-                            <MenuItem value="priceHighLow">Price: High to Low</MenuItem>
-                            <MenuItem value="popular">Most Popular</MenuItem>
+                            <MenuItem value="newest">Plus récentes</MenuItem>
+                            <MenuItem value="priceLowHigh">Prix : croissant</MenuItem>
+                            <MenuItem value="priceHighLow">Prix : décroissant</MenuItem>
+                            <MenuItem value="popular">Les plus populaires</MenuItem>
                         </TextField>
                     </Grid>
                     <Grid item xs={12} md={4}>
@@ -153,19 +143,19 @@ export default function StorePage() {
                             startIcon={<FilterList />}
                             sx={{ height: '56px' }}
                         >
-                            Filters
+                            Filtres
                         </Button>
                     </Grid>
                 </Grid>
             </Paper>
 
-            {/* Products Grid */}
-            {!sortedProducts.length ? (
+            {/* Grille de produits */}
+            {sortedProducts.length === 0 ? (
                 <Typography variant="h6" textAlign="center" my={4}>
-                    No products found. Try adjusting your filters.
+                    Aucun produit trouvé. Essayez d'ajuster vos filtres.
                 </Typography>
             ) : (
-                <Grid container spacing={3}>
+                <Grid container spacing={4}>
                     {sortedProducts.map((product) => (
                         <Grid item key={product._id} xs={12} sm={6} md={4} lg={3}>
                             <ProductCard product={product} store={store} />

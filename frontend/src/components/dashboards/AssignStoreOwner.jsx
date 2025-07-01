@@ -13,8 +13,8 @@ import {
 import axios from 'axios';
 import '../../styles/admin/dashboardadmin.css';
 
-// AssignStoreOwner: Form to assign a store owner to a store
-export default function AssignStoreOwner() {
+// AssignationProprietaireMagasin : Formulaire pour assigner un propriétaire à un magasin
+export default function AssignationProprietaireMagasin() {
     const [stores, setStores] = useState([]);
     const [storeOwners, setStoreOwners] = useState([]);
     const [selectedStoreId, setSelectedStoreId] = useState('');
@@ -30,7 +30,7 @@ export default function AssignStoreOwner() {
                 });
                 setStores(res.data);
             } catch (error) {
-                console.error('Error fetching stores:', error);
+                console.error('Erreur lors de la récupération des magasins :', error);
             }
         };
 
@@ -42,7 +42,7 @@ export default function AssignStoreOwner() {
                 });
                 setStoreOwners(res.data);
             } catch (error) {
-                console.error('Error fetching store owners:', error);
+                console.error('Erreur lors de la récupération des propriétaires :', error);
             }
         };
 
@@ -52,7 +52,7 @@ export default function AssignStoreOwner() {
 
     const handleAssign = async () => {
         if (!selectedStoreId || !selectedOwnerId) {
-            alert('Please select both a store and a store owner');
+            alert('Veuillez sélectionner un magasin et un propriétaire');
             return;
         }
         setLoading(true);
@@ -63,12 +63,12 @@ export default function AssignStoreOwner() {
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            alert('Store owner assigned successfully!');
+            alert('Propriétaire assigné avec succès !');
             setSelectedStoreId('');
             setSelectedOwnerId('');
         } catch (error) {
-            console.error('Error assigning store owner:', error);
-            alert('Failed to assign store owner. See console for details.');
+            console.error('Erreur lors de l\'assignation du propriétaire :', error);
+            alert('Échec de l\'assignation. Vérifiez la console pour plus de détails.');
         }
         setLoading(false);
     };
@@ -77,14 +77,14 @@ export default function AssignStoreOwner() {
         <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
             <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 'medium' }}>
-                    Assign Store Owner to Store
+                    Assigner un propriétaire à un magasin
                 </Typography>
                 <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel id="store-select-label">Select Store</InputLabel>
+                    <InputLabel id="store-select-label">Choisir un magasin</InputLabel>
                     <Select
                         labelId="store-select-label"
                         value={selectedStoreId}
-                        label="Select Store"
+                        label="Choisir un magasin"
                         onChange={(e) => setSelectedStoreId(e.target.value)}
                         sx={{
                             '& .MuiOutlinedInput-root': {
@@ -93,7 +93,7 @@ export default function AssignStoreOwner() {
                         }}
                     >
                         <MenuItem value="">
-                            <em>Select a store</em>
+                            <em>Sélectionner un magasin</em>
                         </MenuItem>
                         {stores.map((store) => (
                             <MenuItem key={store._id} value={store._id}>
@@ -103,11 +103,11 @@ export default function AssignStoreOwner() {
                     </Select>
                 </FormControl>
                 <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel id="owner-select-label">Select Store Owner</InputLabel>
+                    <InputLabel id="owner-select-label">Choisir un propriétaire</InputLabel>
                     <Select
                         labelId="owner-select-label"
                         value={selectedOwnerId}
-                        label="Select Store Owner"
+                        label="Choisir un propriétaire"
                         onChange={(e) => setSelectedOwnerId(e.target.value)}
                         sx={{
                             '& .MuiOutlinedInput-root': {
@@ -116,7 +116,7 @@ export default function AssignStoreOwner() {
                         }}
                     >
                         <MenuItem value="">
-                            <em>Select an owner</em>
+                            <em>Sélectionner un propriétaire</em>
                         </MenuItem>
                         {storeOwners.map((owner) => (
                             <MenuItem key={owner._id} value={owner._id}>
@@ -140,7 +140,7 @@ export default function AssignStoreOwner() {
                             '&:hover': { bgcolor: 'primary.dark' },
                         }}
                     >
-                        {loading ? 'Assigning...' : 'Assign Store Owner'}
+                        {loading ? 'Assignation...' : 'Assigner'}
                     </Button>
                 </Box>
             </Paper>

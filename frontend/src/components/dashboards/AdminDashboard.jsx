@@ -1,3 +1,4 @@
+// src/components/AdminDashboard.jsx
 import React from 'react';
 import AdminLayout from './AdminLayout';
 import StoreOwnersManagement from './StoreOwnersManagement';
@@ -5,7 +6,7 @@ import StoresManagement from './StoresManagement';
 import AssignStoreOwner from './AssignStoreOwner';
 import CategoriesManagement from './CategoriesManagement';
 
-// AdminDashboard: Main component that renders the admin panel with a layout and section switching
+// AdminDashboard : composant principal qui affiche le panneau d'administration avec le layout et le contenu dynamique
 export default function AdminDashboard() {
     return (
         <AdminLayout>
@@ -22,7 +23,7 @@ export default function AdminDashboard() {
                     default:
                         return (
                             <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>
-                                Select a section from the sidebar
+                                Sélectionnez une section dans la barre latérale
                             </div>
                         );
                 }

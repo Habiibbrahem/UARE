@@ -8,87 +8,72 @@ import {
     ListItemText,
     Toolbar,
     Typography,
-    useTheme,
-    useMediaQuery,
+    IconButton,
+    useTheme
 } from '@mui/material';
-import '../../styles/dashboard.css';
+import { Menu as MenuIcon, MenuOpen as MenuOpenIcon } from '@mui/icons-material';
 
-const drawerWidth = 240;
+const drawerWidthMember = 240;
+const memberItems = [
+    { key: 'categories', label: 'Gérer Catégories' },
+    { key: 'products', label: 'Gérer Produits' },
+];
 
 export default function StoreMemberLayout({ children }) {
-    const [selectedIndex, setSelectedIndex] = useState(0);
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-
-    const menuItems = [
-        { label: 'Manage Categories', key: 'categories' },
-        { label: 'Manage Products', key: 'products' },
-    ];
+    const [open, setOpen] = useState(true);
+    const [selectedIndex, setSelectedIndex] = useState(0);
 
     return (
-        <Box className="dashboard-container">
+        <Box sx={{ display: 'flex' }}>
             <Drawer
                 variant="permanent"
+                open={open}
                 sx={{
-                    width: drawerWidth,
+                    width: open ? drawerWidthMember : theme.spacing(9),
                     flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: {
-                        width: drawerWidth,
-                        boxSizing: 'border-box',
-                        position: 'fixed',
-                        backgroundColor: theme.palette.primary.main,
-                        color: theme.palette.primary.contrastText,
-                        top: '106px',
-                        height: 'calc(100vh - 106px)',
-                        [theme.breakpoints.down('md')]: {
-                            top: '92px',
-                            height: 'calc(100vh - 92px)',
-                        }
+                    '& .MuiDrawer-paper': {
+                        width: open ? drawerWidthMember : theme.spacing(9),
+                        mt: '106px',
+                        bgcolor: 'primary.main',
+                        color: 'common.white',
+                        border: 'none',
+                        transition: theme.transitions.create('width'),
                     },
                 }}
-                className="dashboard-sidebar"
             >
-                <Toolbar className="dashboard-sidebar-header">
-                    <Typography variant="h6" noWrap component="div">
-                        Store Member Panel
-                    </Typography>
+                <Toolbar sx={{ justifyContent: 'space-between', px: 2 }}>
+                    {open && <Typography variant="h6">Panel Membre</Typography>}
+                    <IconButton onClick={() => setOpen(o => !o)} sx={{ color: 'common.white' }}>
+                        {open ? <MenuOpenIcon /> : <MenuIcon />}
+                    </IconButton>
                 </Toolbar>
-                <List className="dashboard-menu">
-                    {menuItems.map((item, idx) => (
-                        <ListItem
-                            key={item.key}
-                            disablePadding
-                            selected={selectedIndex === idx}
-                            onClick={() => setSelectedIndex(idx)}
-                            className={`dashboard-menu-item ${selectedIndex === idx ? 'selected' : ''}`}
-                        >
-                            <ListItemButton className="dashboard-menu-button">
-                                <ListItemText
-                                    primary={item.label}
-                                    primaryTypographyProps={{
-                                        color: 'inherit',
-                                        fontWeight: selectedIndex === idx ? '600' : '400'
-                                    }}
-                                />
+                <List>
+                    {memberItems.map((item, idx) => (
+                        <ListItem key={item.key} disablePadding>
+                            <ListItemButton
+                                selected={selectedIndex === idx}
+                                onClick={() => setSelectedIndex(idx)}
+                                sx={{
+                                    justifyContent: open ? 'initial' : 'center',
+                                    px: 2,
+                                    '&.Mui-selected': {
+                                        bgcolor: 'primary.dark',
+                                        borderLeft: `4px solid ${theme.palette.secondary.main}`
+                                    },
+                                    '&:hover': { bgcolor: 'primary.light' }
+                                }}
+                            >
+                                {open && <ListItemText primary={item.label} />}
                             </ListItemButton>
                         </ListItem>
                     ))}
                 </List>
             </Drawer>
-
-            <Box
-                component="main"
-                className="dashboard-main-content"
-                sx={{
-                    marginLeft: isMobile ? 0 : `${drawerWidth}px`,
-                    width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`,
-                    overflowX: 'auto',
-                    padding: '30px'
-                }}
-            >
-                {typeof children === 'function'
-                    ? children(menuItems[selectedIndex].key)
-                    : children}
+            <Box component="main" sx={{ flexGrow: 1, p: 3, mt: '106px', bgcolor: 'grey.100' }}>
+                <Box sx={{ bgcolor: 'white', p: 3, borderRadius: 2, boxShadow: 3 }}>
+                    {typeof children === 'function' ? children(memberItems[selectedIndex].key) : children}
+                </Box>
             </Box>
         </Box>
     );

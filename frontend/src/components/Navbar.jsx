@@ -288,7 +288,7 @@ export default function Navbar({ isAdmin = false }) {
                         <form onSubmit={handleSearch} className="search-form">
                             <input
                                 type="text"
-                                placeholder="Search products..."
+                                placeholder="Rechercher des produits..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="search-input"
@@ -314,13 +314,13 @@ export default function Navbar({ isAdmin = false }) {
                             {isLoggedIn ? (
                                 <>
                                     <Link to="/account" className="dropdown-link">
-                                        My Account
+                                        Mon compte
                                     </Link>
                                     <Link to="/orders" className="dropdown-link">
-                                        My Orders
+                                        Mes commandes
                                     </Link>
                                     <button onClick={handleLogout} className="dropdown-link">
-                                        Logout
+                                        Déconnexion
                                     </button>
                                 </>
                             ) : (
@@ -329,13 +329,13 @@ export default function Navbar({ isAdmin = false }) {
                                         onClick={() => navigate('/login')}
                                         className="dropdown-link"
                                     >
-                                        Login
+                                        Se connecter
                                     </button>
                                     <button
                                         onClick={() => navigate('/signup')}
                                         className="dropdown-link"
                                     >
-                                        Sign Up
+                                        S'inscrire
                                     </button>
                                 </>
                             )}
@@ -365,7 +365,7 @@ export default function Navbar({ isAdmin = false }) {
                     <form onSubmit={handleSearch} className="search-form">
                         <input
                             type="text"
-                            placeholder="Search products..."
+                            placeholder="Rechercher des produits..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="search-input"

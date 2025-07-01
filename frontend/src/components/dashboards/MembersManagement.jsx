@@ -12,62 +12,56 @@ import {
     ListItemText,
     Card,
     Divider,
-    styled
+    styled,
+    Stack,
 } from '@mui/material';
 
 const API_BASE = 'http://localhost:3000';
 
-const MemberCard = styled(Card)(({ theme }) => ({
-    padding: theme.spacing(3),
+// Carte de section pour uniformiser le style
+const SectionCard = styled(Card)(({ theme }) => ({
+    padding: theme.spacing(4),
     borderRadius: theme.shape.borderRadius * 2,
-    boxShadow: theme.shadows[2],
-    marginBottom: theme.spacing(3),
+    boxShadow: theme.shadows[3],
     backgroundColor: theme.palette.background.paper,
+    marginBottom: theme.spacing(4),
 }));
 
-const MemberListItem = styled(ListItem)(({ theme }) => ({
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+// Élément de liste de membre
+const MemberItem = styled(ListItem)(({ theme }) => ({
     padding: theme.spacing(1.5, 2),
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    '&:last-child': {
-        borderBottom: 'none',
+    '&:not(:last-child)': {
+        borderBottom: `1px solid ${theme.palette.divider}`,
     },
 }));
 
-const FormInput = styled(TextField)(({ theme }) => ({
+// Champ de formulaire stylé
+const InputField = styled(TextField)(({ theme }) => ({
     '& .MuiOutlinedInput-root': {
         borderRadius: theme.shape.borderRadius,
     },
 }));
 
-export default function MembersManagement() {
+export default function GestionMembres() {
     const [store, setStore] = useState(null);
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [newMember, setNewMember] = useState({
-        name: '',
-        email: '',
-        password: '',
-    });
+    const [newMember, setNewMember] = useState({ name: '', email: '', password: '' });
     const [creating, setCreating] = useState(false);
 
     useEffect(() => {
-        const fetchStore = async () => {
+        (async () => {
             try {
                 setLoading(true);
                 const token = localStorage.getItem('token');
-                if (!token) throw new Error('You must be logged in');
+                if (!token) throw new Error('Vous devez être connecté');
 
                 const res = await axios.get(`${API_BASE}/stores/owner`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                if (!Array.isArray(res.data) || res.data.length === 0) {
-                    throw new Error('No store assigned to this owner');
-                }
+                if (!res.data.length) throw new Error('Aucun magasin assigné');
 
                 const ownerStore = res.data[0];
                 setStore(ownerStore);
@@ -75,71 +69,63 @@ export default function MembersManagement() {
                 setError(null);
             } catch (err) {
                 console.error(err);
-                setError(err.message || 'Failed to load store');
+                setError(err.message);
             } finally {
                 setLoading(false);
             }
-        };
-        fetchStore();
+        })();
     }, []);
 
-    const token = localStorage.getItem('token');
-    const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
-
-    const handleInput = (e) => {
-        setNewMember({ ...newMember, [e.target.name]: e.target.value });
+    const authHeader = () => {
+        const token = localStorage.getItem('token');
+        return token ? { Authorization: `Bearer ${token}` } : {};
     };
 
-    const handleCreateMember = async () => {
+    const handleInput = (e) => setNewMember({ ...newMember, [e.target.name]: e.target.value });
+
+    const handleCreate = async () => {
         const { name, email, password } = newMember;
         if (!name || !email || !password) {
-            alert('Name, email & password are required');
+            alert('Nom, email et mot de passe requis');
             return;
         }
-
         setCreating(true);
         try {
             const { data: user } = await createUser(
                 { name, email, password, role: 'store_member' },
-                token
+                localStorage.getItem('token')
             );
-
             await axios.post(
                 `${API_BASE}/stores/${store._id}/members`,
                 { userId: user._id },
-                { headers: authHeader }
+                { headers: authHeader() }
             );
-
             setMembers((prev) => [...prev, user]);
             setNewMember({ name: '', email: '', password: '' });
         } catch (err) {
             console.error(err.response?.data || err.message);
-            alert(
-                err.response?.data?.message ||
-                err.message ||
-                'Failed to create & add member'
-            );
+            alert(err.response?.data?.message || 'Échec de la création');
         } finally {
             setCreating(false);
         }
     };
 
-    const handleRemoveMember = async (userId) => {
-        if (!window.confirm('Remove this member?')) return;
+    const handleRemove = async (userId) => {
+        if (!window.confirm('Supprimer ce membre ?')) return;
         try {
             await axios.delete(
                 `${API_BASE}/stores/${store._id}/members/${userId}`,
-                { headers: authHeader }
+                { headers: authHeader() }
             );
             setMembers((prev) => prev.filter((m) => m._id !== userId));
         } catch (err) {
             console.error(err.response?.data || err.message);
-            alert(err.response?.data?.message || err.message || 'Failed to remove');
+            alert('Échec de la suppression');
         }
     };
 
     if (loading) return (
-        <Box display="flex" justifyContent="center">
+        <Box display="flex" justifyContent="center" sx={{ mt: 4 }}>
             <CircularProgress />
         </Box>
     );
@@ -148,30 +134,30 @@ export default function MembersManagement() {
     if (!store) return null;
 
     return (
-        <Box>
-            <Typography variant="h5" sx={{
-                mb: 3,
-                fontWeight: 600,
-                pb: 1,
-                borderBottom: '2px solid',
-                borderColor: 'divider'
-            }}>
-                Manage Members for "{store.name}"
+        <Box sx={{ px: 3, py: 2, maxWidth: 800, mx: 'auto' }}>
+            <Typography
+                variant="h4"
+                sx={{
+                    mb: 4,
+                    fontWeight: 700,
+                    pb: 1,
+                    borderBottom: 2,
+                    borderColor: 'divider',
+                }}
+            >
+                Gestion des membres — « {store.name} »
             </Typography>
 
-            <MemberCard>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
-                    Current Members
+            <SectionCard>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Membres actuels
                 </Typography>
-
                 {members.length === 0 ? (
-                    <Typography variant="body1" color="text.secondary">
-                        No members yet.
-                    </Typography>
+                    <Typography color="text.secondary">Aucun membre pour le moment.</Typography>
                 ) : (
                     <List disablePadding>
                         {members.map((m) => (
-                            <MemberListItem key={m._id}>
+                            <MemberItem key={m._id}>
                                 <ListItemText
                                     primary={m.name}
                                     secondary={m.email}
@@ -181,64 +167,63 @@ export default function MembersManagement() {
                                     variant="outlined"
                                     color="error"
                                     size="small"
-                                    onClick={() => handleRemoveMember(m._id)}
+                                    onClick={() => handleRemove(m._id)}
                                     sx={{ textTransform: 'none' }}
                                 >
-                                    Remove
+                                    Supprimer
                                 </Button>
-                            </MemberListItem>
+                            </MemberItem>
                         ))}
                     </List>
                 )}
-            </MemberCard>
+            </SectionCard>
 
-            <MemberCard>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
-                    Add New Member
+            <Divider sx={{ my: 2 }} />
+
+            <SectionCard>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Ajouter un nouveau membre
                 </Typography>
-                <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <FormInput
-                        label="Name"
+                <Stack spacing={2}>
+                    <InputField
+                        label="Nom"
                         name="name"
                         value={newMember.name}
                         onChange={handleInput}
                         fullWidth
-                        variant="outlined"
                     />
-                    <FormInput
+                    <InputField
                         label="Email"
                         name="email"
                         type="email"
                         value={newMember.email}
                         onChange={handleInput}
                         fullWidth
-                        variant="outlined"
                     />
-                    <FormInput
-                        label="Password"
+                    <InputField
+                        label="Mot de passe"
                         name="password"
                         type="password"
                         value={newMember.password}
                         onChange={handleInput}
                         fullWidth
-                        variant="outlined"
                     />
                     <Button
                         variant="contained"
                         color="primary"
-                        onClick={handleCreateMember}
+                        onClick={handleCreate}
                         disabled={creating}
                         sx={{
                             alignSelf: 'flex-start',
                             textTransform: 'none',
-                            px: 3,
-                            py: 1
+                            px: 4,
+                            py: 1.5,
                         }}
                     >
-                        {creating ? 'Creating...' : 'Create & Add Member'}
+                        {creating ? 'Création…' : 'Créer et ajouter'}
                     </Button>
-                </Box>
-            </MemberCard>
+                </Stack>
+            </SectionCard>
         </Box>
     );
 }

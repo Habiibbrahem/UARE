@@ -1,4 +1,5 @@
-import React from 'react';
+// src/components/ProductCard.jsx
+import React, { useState } from 'react';
 import {
     Card,
     CardMedia,
@@ -17,7 +18,7 @@ import useCartStore from '../store/useCartStore';
 
 export default function ProductCard({ product, store }) {
     const addToCart = useCartStore((state) => state.addToCart);
-    const [isFavorite, setIsFavorite] = React.useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
 
     const handleAddToCart = (e) => {
         e.preventDefault();
@@ -74,10 +75,10 @@ export default function ProductCard({ product, store }) {
                     />
                 )}
 
-                {/* Out of Stock badge */}
+                {/* Indicateur « Rupture de stock » */}
                 {product.quantity !== undefined && product.quantity <= 0 && (
                     <Chip
-                        label="Out of Stock"
+                        label="Rupture de stock"
                         color="error"
                         size="small"
                         sx={{ position: 'absolute', bottom: 8, left: 8 }}
@@ -126,7 +127,7 @@ export default function ProductCard({ product, store }) {
                     to={`/product/${product._id}`}
                     sx={{ mr: 1 }}
                 >
-                    View
+                    Voir le produit
                 </Button>
                 <IconButton
                     size="small"

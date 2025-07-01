@@ -22,6 +22,7 @@ import {
     FormControl,
     InputLabel,
     Select,
+    styled
 } from '@mui/material';
 import axiosInstance from '../../services/axiosInstance';
 import {
@@ -32,7 +33,70 @@ import {
 } from '../../services/productService';
 import '../../styles/dashboard.css';
 
-export default function ProductsManagement() {
+// Boutons stylisés
+
+const PrimaryButton = styled(Button)(({ theme }) => ({
+    textTransform: 'none',
+    padding: '10px 24px',
+    borderRadius: theme.shape.borderRadius * 2,
+    fontWeight: 600,
+    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+    color: '#fff',
+    boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
+    transition: 'background 0.3s ease',
+    '&:hover': {
+        background: 'linear-gradient(45deg, #1976D2 30%, #1E88E5 90%)',
+        boxShadow: '0 6px 10px 4px rgba(25, 118, 210, .4)',
+    },
+}));
+
+const SecondaryButton = styled(Button)(({ theme }) => ({
+    textTransform: 'none',
+    padding: '10px 24px',
+    borderRadius: theme.shape.borderRadius * 2,
+    fontWeight: 600,
+    border: `2px solid ${theme.palette.grey[400]}`,
+    color: theme.palette.grey[700],
+    backgroundColor: '#fff',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        borderColor: theme.palette.grey[600],
+        backgroundColor: theme.palette.grey[100],
+        color: theme.palette.grey[900],
+    },
+}));
+
+const EditButton = styled(Button)(({ theme }) => ({
+    textTransform: 'none',
+    padding: '6px 16px',
+    borderRadius: theme.shape.borderRadius * 1.5,
+    fontWeight: 600,
+    backgroundColor: '#4caf50',
+    color: '#fff',
+    boxShadow: '0 2px 4px rgba(76, 175, 80, 0.4)',
+    transition: 'background-color 0.3s ease',
+    '&:hover': {
+        backgroundColor: '#388e3c',
+        boxShadow: '0 4px 8px rgba(56, 142, 60, 0.5)',
+    },
+}));
+
+const DeleteButton = styled(Button)(({ theme }) => ({
+    textTransform: 'none',
+    padding: '6px 16px',
+    borderRadius: theme.shape.borderRadius * 1.5,
+    fontWeight: 600,
+    backgroundColor: '#f44336',
+    color: '#fff',
+    boxShadow: '0 2px 4px rgba(244, 67, 54, 0.4)',
+    transition: 'background-color 0.3s ease',
+    '&:hover': {
+        backgroundColor: '#d32f2f',
+        boxShadow: '0 4px 8px rgba(211, 47, 47, 0.5)',
+    },
+}));
+
+export default function GestionProduits() {
     const [storeId, setStoreId] = useState(undefined);
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -149,7 +213,7 @@ export default function ProductsManagement() {
                 justifyContent: 'center'
             }}>
                 <Typography align="center">
-                    You do not have access to a store.
+                    Vous n'avez pas accès à une boutique.
                 </Typography>
             </Box>
         );
@@ -196,21 +260,21 @@ export default function ProductsManagement() {
                 res = await createProduct(fd);
                 setProducts(ps => [...ps, res.data]);
             }
-            setSnackbar({ open: true, msg: 'Saved!', sev: 'success' });
+            setSnackbar({ open: true, msg: 'Enregistré !', sev: 'success' });
             closeForm();
         } catch {
-            setSnackbar({ open: true, msg: 'Failed to save', sev: 'error' });
+            setSnackbar({ open: true, msg: 'Échec de l\'enregistrement', sev: 'error' });
         }
     };
 
     const remove = async id => {
-        if (!window.confirm('Delete this product?')) return;
+        if (!window.confirm('Supprimer ce produit ?')) return;
         try {
             await deleteProduct(id);
             setProducts(ps => ps.filter(p => p._id !== id));
-            setSnackbar({ open: true, msg: 'Deleted!', sev: 'success' });
+            setSnackbar({ open: true, msg: 'Supprimé !', sev: 'success' });
         } catch {
-            setSnackbar({ open: true, msg: 'Failed to delete', sev: 'error' });
+            setSnackbar({ open: true, msg: 'Échec de la suppression', sev: 'error' });
         }
     };
 
@@ -232,14 +296,10 @@ export default function ProductsManagement() {
                 alignItems: 'center',
                 mb: 3,
             }}>
-                <Typography variant="h5">Products Management</Typography>
-                <Button
-                    variant="contained"
-                    onClick={() => openForm()}
-                    className="dashboard-primary-button"
-                >
-                    Add Product
-                </Button>
+                <Typography variant="h5">Gestion des produits</Typography>
+                <PrimaryButton onClick={() => openForm()}>
+                    Ajouter un produit
+                </PrimaryButton>
             </Box>
 
             {loading ? (
@@ -262,12 +322,12 @@ export default function ProductsManagement() {
                     <Table className="dashboard-table" sx={{ minWidth: 1000 }}>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Name</TableCell>
+                                <TableCell>Nom</TableCell>
                                 <TableCell>Description</TableCell>
                                 <TableCell>Image</TableCell>
-                                <TableCell>Price</TableCell>
-                                <TableCell>Qty</TableCell>
-                                <TableCell>Category</TableCell>
+                                <TableCell>Prix</TableCell>
+                                <TableCell>Quantité</TableCell>
+                                <TableCell>Catégorie</TableCell>
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
@@ -275,7 +335,7 @@ export default function ProductsManagement() {
                             {products.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} align="center" className="dashboard-no-data">
-                                        No products found
+                                        Aucun produit trouvé
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -300,21 +360,12 @@ export default function ProductsManagement() {
                                             {breadcrumbs[p.categoryId?._id || p.categoryId] || '-'}
                                         </TableCell>
                                         <TableCell align="right">
-                                            <Button
-                                                size="small"
-                                                onClick={() => openForm(p)}
-                                                className="dashboard-action-button edit"
-                                            >
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                size="small"
-                                                color="error"
-                                                onClick={() => remove(p._id)}
-                                                className="dashboard-action-button delete"
-                                            >
-                                                Delete
-                                            </Button>
+                                            <EditButton size="small" onClick={() => openForm(p)}>
+                                                Modifier
+                                            </EditButton>
+                                            <DeleteButton size="small" onClick={() => remove(p._id)}>
+                                                Supprimer
+                                            </DeleteButton>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -326,14 +377,14 @@ export default function ProductsManagement() {
 
             <Dialog open={dialogOpen} onClose={closeForm}>
                 <DialogTitle>
-                    {current?._id ? 'Edit Product' : 'Add Product'}
+                    {current?._id ? 'Modifier le produit' : 'Ajouter un produit'}
                 </DialogTitle>
                 <DialogContent>
                     <Box className="dashboard-form-input">
                         <TextField
                             fullWidth
                             margin="dense"
-                            label="Name"
+                            label="Nom"
                             value={current?.name || ''}
                             onChange={e => setCurrent(c => ({ ...c, name: e.target.value }))}
                         />
@@ -358,7 +409,7 @@ export default function ProductsManagement() {
                     )}
                     <Box className="dashboard-file-upload">
                         <Button variant="outlined" component="label" className="dashboard-file-upload-button">
-                            Upload Image
+                            Télécharger une image
                             <input type="file" hidden accept="image/*" onChange={onFile} />
                         </Button>
                         {current?.imageFile && <Typography>{current.imageFile.name}</Typography>}
@@ -368,7 +419,7 @@ export default function ProductsManagement() {
                             fullWidth
                             margin="dense"
                             type="number"
-                            label="Price"
+                            label="Prix"
                             value={current?.price || 0}
                             onChange={e => setCurrent(c => ({ ...c, price: +e.target.value }))}
                         />
@@ -378,20 +429,20 @@ export default function ProductsManagement() {
                             fullWidth
                             margin="dense"
                             type="number"
-                            label="Quantity"
+                            label="Quantité"
                             value={current?.quantity || 0}
                             onChange={e => setCurrent(c => ({ ...c, quantity: +e.target.value }))}
                         />
                     </Box>
                     <Box className="dashboard-form-input">
                         <FormControl fullWidth margin="dense">
-                            <InputLabel>Category</InputLabel>
+                            <InputLabel>Catégorie</InputLabel>
                             <Select
-                                label="Category"
+                                label="Catégorie"
                                 value={current?.categoryId || ''}
                                 onChange={e => setCurrent(c => ({ ...c, categoryId: e.target.value }))}
                             >
-                                <MenuItem value="">— none —</MenuItem>
+                                <MenuItem value="">— aucune —</MenuItem>
                                 {categories.map(c => (
                                     <MenuItem key={c._id} value={c._id}>
                                         {breadcrumbs[c._id] || c.name}
@@ -402,12 +453,12 @@ export default function ProductsManagement() {
                     </Box>
                 </DialogContent>
                 <DialogActions className="dashboard-dialog-actions">
-                    <Button onClick={closeForm} className="dashboard-secondary-button">
-                        Cancel
-                    </Button>
-                    <Button onClick={saveProduct} className="dashboard-primary-button">
-                        Save
-                    </Button>
+                    <SecondaryButton onClick={closeForm}>
+                        Annuler
+                    </SecondaryButton>
+                    <PrimaryButton onClick={saveProduct}>
+                        Enregistrer
+                    </PrimaryButton>
                 </DialogActions>
             </Dialog>
 

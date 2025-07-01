@@ -22,8 +22,8 @@ import { Add, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
 import '../../styles/admin/dashboardadmin.css';
 
-// StoresManagement: Manages stores with a table and dialog for add/edit, including image upload
-export default function StoresManagement() {
+// GestionMagasins : Gère les magasins avec un tableau et une boîte de dialogue pour ajouter/modifier, y compris l'upload d'image
+export default function GestionMagasins() {
     const [stores, setStores] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedStore, setSelectedStore] = useState(null);
@@ -31,6 +31,7 @@ export default function StoresManagement() {
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
 
+    // Récupérer les magasins
     const fetchStores = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -39,7 +40,7 @@ export default function StoresManagement() {
             });
             setStores(res.data);
         } catch (error) {
-            console.error('Error fetching stores:', error);
+            console.error('Erreur lors de la récupération des magasins :', error);
         }
     };
 
@@ -93,11 +94,11 @@ export default function StoresManagement() {
 
     const handleSave = async () => {
         if (!selectedStore.name) {
-            alert('Store name is required');
+            alert('Le nom du magasin est requis');
             return;
         }
         if (!selectedStore.image && !imageFile) {
-            alert('Store image is required');
+            alert('L\'image du magasin est requise');
             return;
         }
         setLoading(true);
@@ -124,14 +125,14 @@ export default function StoresManagement() {
             await fetchStores();
             handleCloseDialog();
         } catch (error) {
-            console.error('Error saving store:', error);
-            alert('Failed to save store');
+            console.error('Erreur lors de l\'enregistrement du magasin :', error);
+            alert('Échec de l\'enregistrement du magasin');
         }
         setLoading(false);
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this store?')) return;
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce magasin ?')) return;
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`http://localhost:3000/stores/${id}`, {
@@ -139,8 +140,8 @@ export default function StoresManagement() {
             });
             fetchStores();
         } catch (error) {
-            console.error('Error deleting store:', error);
-            alert('Failed to delete store');
+            console.error('Erreur lors de la suppression du magasin :', error);
+            alert('Échec de la suppression du magasin');
         }
     };
 
@@ -148,7 +149,7 @@ export default function StoresManagement() {
         <Box sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h5" sx={{ fontWeight: 'medium' }}>
-                    Stores Management
+                    Gestion des magasins
                 </Typography>
                 <Button
                     variant="contained"
@@ -162,7 +163,7 @@ export default function StoresManagement() {
                         '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
-                    Add Store
+                    Ajouter un magasin
                 </Button>
             </Box>
 
@@ -170,11 +171,11 @@ export default function StoresManagement() {
                 <Table>
                     <TableHead>
                         <TableRow sx={{ bgcolor: 'grey.100' }}>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Owner</TableCell>
+                            <TableCell>Nom</TableCell>
+                            <TableCell>Propriétaire</TableCell>
                             <TableCell>Image</TableCell>
-                            <TableCell>Address</TableCell>
-                            <TableCell>Phone Number</TableCell>
+                            <TableCell>Adresse</TableCell>
+                            <TableCell>Téléphone</TableCell>
                             <TableCell>Email</TableCell>
                             <TableCell align="right">Actions</TableCell>
                         </TableRow>
@@ -184,7 +185,7 @@ export default function StoresManagement() {
                             <TableRow key={store._id} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
                                 <TableCell>{store.name}</TableCell>
                                 <TableCell>
-                                    {store.ownerId ? store.ownerId.name || store.ownerId.email : 'No owner assigned'}
+                                    {store.ownerId ? store.ownerId.name || store.ownerId.email : 'Aucun propriétaire'}
                                 </TableCell>
                                 <TableCell>
                                     {store.image ? (
@@ -195,7 +196,7 @@ export default function StoresManagement() {
                                         />
                                     ) : (
                                         <Typography variant="body2" color="text.secondary">
-                                            No image
+                                            Aucun visuel
                                         </Typography>
                                     )}
                                 </TableCell>
@@ -230,12 +231,12 @@ export default function StoresManagement() {
                 sx={{ '& .MuiDialog-paper': { borderRadius: 2, p: 2 } }}
             >
                 <DialogTitle sx={{ fontWeight: 'medium' }}>
-                    {selectedStore && selectedStore._id ? 'Edit Store' : 'Add Store'}
+                    {selectedStore && selectedStore._id ? 'Modifier un magasin' : 'Ajouter un magasin'}
                 </DialogTitle>
                 <DialogContent>
                     <TextField
                         margin="dense"
-                        label="Name"
+                        label="Nom"
                         name="name"
                         value={selectedStore?.name || ''}
                         onChange={handleInputChange}
@@ -245,7 +246,7 @@ export default function StoresManagement() {
                     />
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="body2" sx={{ mb: 1 }}>
-                            Upload Image
+                            Image du magasin
                         </Typography>
                         <input
                             accept="image/*"
@@ -257,7 +258,7 @@ export default function StoresManagement() {
                             <Box sx={{ mt: 1 }}>
                                 <img
                                     src={imagePreview}
-                                    alt="Preview"
+                                    alt="Aperçu"
                                     style={{ width: 100, height: 80, objectFit: 'cover', borderRadius: 4 }}
                                 />
                             </Box>
@@ -265,7 +266,7 @@ export default function StoresManagement() {
                     </Box>
                     <TextField
                         margin="dense"
-                        label="Address"
+                        label="Adresse"
                         name="address"
                         value={selectedStore?.address || ''}
                         onChange={handleInputChange}
@@ -274,7 +275,7 @@ export default function StoresManagement() {
                     />
                     <TextField
                         margin="dense"
-                        label="Phone Number"
+                        label="Téléphone"
                         name="phoneNumber"
                         value={selectedStore?.phoneNumber || ''}
                         onChange={handleInputChange}
@@ -297,7 +298,7 @@ export default function StoresManagement() {
                         onClick={handleCloseDialog}
                         sx={{ textTransform: 'none', color: 'grey.600' }}
                     >
-                        Cancel
+                        Annuler
                     </Button>
                     <Button
                         variant="contained"
@@ -310,7 +311,7 @@ export default function StoresManagement() {
                             '&:hover': { bgcolor: 'primary.dark' },
                         }}
                     >
-                        {loading ? 'Saving...' : 'Save'}
+                        {loading ? 'Enregistrement...' : 'Enregistrer'}
                     </Button>
                 </DialogActions>
             </Dialog>

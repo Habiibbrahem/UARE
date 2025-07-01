@@ -1,3 +1,4 @@
+// src/pages/AccountPage.jsx
 import React, { useEffect, useState } from 'react';
 import {
     Box,
@@ -10,13 +11,13 @@ import {
     Alert,
     Paper,
     Stack,
-    Divider,
+    Divider
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
     getCurrentUser,
     updateCurrentUser,
-    deleteCurrentUser,
+    deleteCurrentUser
 } from '../api/userService';
 import './AccountPage.css';
 
@@ -27,13 +28,9 @@ export default function AccountPage() {
         email: '',
         currentPassword: '',
         newPassword: '',
-        confirmPassword: '',
+        confirmPassword: ''
     });
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success',
-    });
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
     useEffect(() => {
         (async () => {
@@ -58,33 +55,33 @@ export default function AccountPage() {
         const { email, currentPassword, newPassword, confirmPassword } = form;
 
         if (!currentPassword) {
-            return setSnackbar({ open: true, message: 'Current password is required', severity: 'error' });
+            return setSnackbar({ open: true, message: 'Le mot de passe actuel est requis', severity: 'error' });
         }
         if (newPassword && newPassword !== confirmPassword) {
-            return setSnackbar({ open: true, message: 'New passwords do not match', severity: 'error' });
+            return setSnackbar({ open: true, message: 'Les nouveaux mots de passe ne correspondent pas', severity: 'error' });
         }
 
         try {
             await updateCurrentUser({ email, currentPassword, newPassword, confirmPassword });
-            setSnackbar({ open: true, message: 'Account updated!', severity: 'success' });
+            setSnackbar({ open: true, message: 'Profil mis à jour !', severity: 'success' });
             setForm(f => ({ ...f, currentPassword: '', newPassword: '', confirmPassword: '' }));
         } catch (err) {
-            setSnackbar({ open: true, message: err.response?.data?.message || 'Update failed', severity: 'error' });
+            setSnackbar({ open: true, message: err.response?.data?.message || 'Échec de la mise à jour', severity: 'error' });
         }
     };
 
     const handleDelete = async () => {
         if (!form.currentPassword) {
-            return setSnackbar({ open: true, message: 'Current password is required to delete account', severity: 'error' });
+            return setSnackbar({ open: true, message: 'Le mot de passe actuel est requis pour supprimer le compte', severity: 'error' });
         }
-        if (!window.confirm('Really delete your account?')) return;
+        if (!window.confirm('Voulez-vous vraiment supprimer votre compte ?')) return;
 
         try {
             await deleteCurrentUser(form.currentPassword);
             localStorage.removeItem('token');
             navigate('/');
         } catch (err) {
-            setSnackbar({ open: true, message: err.response?.data?.message || 'Deletion failed', severity: 'error' });
+            setSnackbar({ open: true, message: err.response?.data?.message || 'Échec de la suppression', severity: 'error' });
         }
     };
 
@@ -101,7 +98,7 @@ export default function AccountPage() {
             <Paper elevation={3} className="account-card">
                 <Box className="account-header">
                     <Typography variant="h5" className="account-title">
-                        My Account
+                        Mon compte
                     </Typography>
                     <Divider className="account-divider" />
                 </Box>
@@ -111,7 +108,7 @@ export default function AccountPage() {
                         <TextField
                             fullWidth
                             variant="outlined"
-                            label="Email"
+                            label="Adresse e-mail"
                             name="email"
                             type="email"
                             value={form.email}
@@ -120,7 +117,7 @@ export default function AccountPage() {
                         <TextField
                             fullWidth
                             variant="outlined"
-                            label="Current Password"
+                            label="Mot de passe actuel"
                             name="currentPassword"
                             type="password"
                             value={form.currentPassword}
@@ -129,17 +126,17 @@ export default function AccountPage() {
                         <TextField
                             fullWidth
                             variant="outlined"
-                            label="New Password"
+                            label="Nouveau mot de passe"
                             name="newPassword"
                             type="password"
-                            helperText="Leave blank to keep current password"
+                            helperText="Laisser vide pour conserver l'actuel"
                             value={form.newPassword}
                             onChange={handleChange}
                         />
                         <TextField
                             fullWidth
                             variant="outlined"
-                            label="Confirm New Password"
+                            label="Confirmer le mot de passe"
                             name="confirmPassword"
                             type="password"
                             value={form.confirmPassword}
@@ -149,10 +146,10 @@ export default function AccountPage() {
 
                     <Box mt={4} display="flex" justifyContent="space-between">
                         <Button type="submit" variant="contained" className="primary-button">
-                            Update Profile
+                            Mettre à jour
                         </Button>
                         <Button variant="outlined" color="error" className="danger-button" onClick={handleDelete}>
-                            Delete Account
+                            Supprimer le compte
                         </Button>
                     </Box>
                 </Box>

@@ -1,3 +1,4 @@
+// src/components/ImageCarousel.jsx
 import React, { useState, useEffect } from 'react';
 import './ImageCarousel.css';
 
@@ -7,21 +8,21 @@ const ImageCarousel = () => {
     const slides = [
         {
             image: '/images/carousel1.jpg',
-            title: 'New Collection',
-            text: 'Discover our latest arrivals for the season',
-            button: 'Shop Now'
+            title: 'Nouvelle Collection',
+            text: 'Découvrez nos dernières nouveautés de la saison',
+            button: 'Voir la collection'
         },
         {
             image: '/images/carousel2.jpg',
-            title: 'Summer Sale',
-            text: 'Up to 50% off selected items',
-            button: 'View Deals'
+            title: 'Soldes d’été',
+            text: "Jusqu'à 50 % de réduction sur une sélection",
+            button: 'Voir les offres'
         },
         {
             image: '/images/carousel3.jpg',
-            title: 'Premium Styles',
-            text: 'Elevate your wardrobe with luxury pieces',
-            button: 'Explore'
+            title: 'Styles Premium',
+            text: 'Sublimez votre garde-robe avec des pièces de luxe',
+            button: 'Explorer'
         }
     ];
 
@@ -42,7 +43,7 @@ const ImageCarousel = () => {
                     >
                         <img
                             src={slide.image}
-                            alt={`Slide ${index + 1}`}
+                            alt={`Diapositive ${index + 1}`}
                             className="carousel-image"
                         />
                         <div className="slide-content">

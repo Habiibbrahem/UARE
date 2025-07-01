@@ -69,7 +69,7 @@ function decodeToken(token) {
     }
 }
 
-export default function OrdersManagement() {
+export default function GestionCommandes() {
     const [orders, setOrders] = useState([]);
     const [storeId, setStoreId] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -90,7 +90,7 @@ export default function OrdersManagement() {
         const token = localStorage.getItem('token');
         const user = decodeToken(token);
         if (!user || !user.sub) {
-            setError('User not authenticated');
+            setError("Utilisateur non authentifié");
             return;
         }
 
@@ -99,11 +99,11 @@ export default function OrdersManagement() {
                 if (Array.isArray(res.data) && res.data.length > 0) {
                     setStoreId(res.data[0]._id);
                 } else {
-                    setError('No store found for the current user.');
+                    setError("Aucune boutique trouvée pour cet utilisateur.");
                 }
             })
             .catch(() => {
-                setError('Failed to load store');
+                setError("Échec du chargement de la boutique");
             });
     }, []);
 
@@ -120,7 +120,7 @@ export default function OrdersManagement() {
             const res = await getOrdersByStore(storeId);
             setOrders(res.data);
         } catch {
-            setError('Failed to load orders');
+            setError("Échec du chargement des commandes");
         }
         setLoading(false);
     };
@@ -129,10 +129,10 @@ export default function OrdersManagement() {
         setActionLoading(true);
         try {
             await updateOrderStatus(orderId, newStatus);
-            setSnackbar({ open: true, message: 'Order status updated', severity: 'success' });
+            setSnackbar({ open: true, message: "Statut mis à jour", severity: 'success' });
             await fetchOrders();
         } catch {
-            setSnackbar({ open: true, message: 'Failed to update status', severity: 'error' });
+            setSnackbar({ open: true, message: "Échec de la mise à jour du statut", severity: 'error' });
         }
         setActionLoading(false);
     };
@@ -154,14 +154,14 @@ export default function OrdersManagement() {
         try {
             if (confirmDialog.action === 'confirmDelivery') {
                 await confirmOrderDelivery(confirmDialog.orderId);
-                setSnackbar({ open: true, message: 'Delivery confirmed', severity: 'success' });
+                setSnackbar({ open: true, message: "Livraison confirmée", severity: 'success' });
             } else if (confirmDialog.action === 'cancelOrder') {
                 await cancelOrder(confirmDialog.orderId);
-                setSnackbar({ open: true, message: 'Order cancelled', severity: 'success' });
+                setSnackbar({ open: true, message: "Commande annulée", severity: 'success' });
             }
             await fetchOrders();
         } catch {
-            setSnackbar({ open: true, message: 'Failed to perform action', severity: 'error' });
+            setSnackbar({ open: true, message: "Échec de l'action", severity: 'error' });
         }
         setActionLoading(false);
         handleConfirmDialogClose();
@@ -176,7 +176,7 @@ export default function OrdersManagement() {
                 borderBottom: '2px solid',
                 borderColor: 'divider'
             }}>
-                Manage Orders
+                Gestion des commandes
             </Typography>
 
             <ContentCard>
@@ -188,15 +188,15 @@ export default function OrdersManagement() {
                     <Typography color="error">{error}</Typography>
                 ) : (
                     <TableContainer component={Paper} sx={{ mt: 2 }}>
-                        <Table size="small" aria-label="orders table">
+                        <Table size="small" aria-label="table des commandes">
                             <TableHead>
                                 <TableRow>
-                                    <StyledTableCell>Order Number</StyledTableCell>
-                                    <StyledTableCell>Customer ID</StyledTableCell>
-                                    <StyledTableCell>Address</StyledTableCell>
-                                    <StyledTableCell>Phone</StyledTableCell>
-                                    <StyledTableCell>Status</StyledTableCell>
-                                    <StyledTableCell>Payment Method</StyledTableCell>
+                                    <StyledTableCell>N° Commande</StyledTableCell>
+                                    <StyledTableCell>ID Client</StyledTableCell>
+                                    <StyledTableCell>Adresse</StyledTableCell>
+                                    <StyledTableCell>Téléphone</StyledTableCell>
+                                    <StyledTableCell>Statut</StyledTableCell>
+                                    <StyledTableCell>Paiement</StyledTableCell>
                                     <StyledTableCell>Total</StyledTableCell>
                                     <StyledTableCell>Actions</StyledTableCell>
                                 </TableRow>
@@ -205,7 +205,7 @@ export default function OrdersManagement() {
                                 {orders.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={8} align="center">
-                                            No orders found.
+                                            Aucune commande trouvée.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -246,7 +246,7 @@ export default function OrdersManagement() {
                                                     disabled={actionLoading || order.status !== 'shipped'}
                                                     onClick={() => handleConfirmDelivery(order._id)}
                                                 >
-                                                    Confirm Delivery
+                                                    Confirmer la livraison
                                                 </ActionButton>
                                                 <ActionButton
                                                     variant="outlined"
@@ -256,7 +256,7 @@ export default function OrdersManagement() {
                                                     }
                                                     onClick={() => handleCancelOrder(order._id)}
                                                 >
-                                                    Cancel
+                                                    Annuler
                                                 </ActionButton>
                                             </TableCell>
                                         </TableRow>
@@ -270,13 +270,10 @@ export default function OrdersManagement() {
 
             <Dialog open={confirmDialog.open} onClose={handleConfirmDialogClose}>
                 <DialogTitle>
-                    {confirmDialog.action === 'confirmDelivery' ? 'Confirm Delivery' : 'Cancel Order'}
+                    {confirmDialog.action === 'confirmDelivery' ? 'Confirmer la livraison' : 'Annuler la commande'}
                 </DialogTitle>
                 <DialogContent>
-                    Are you sure you want to{' '}
-                    {confirmDialog.action === 'confirmDelivery'
-                        ? 'confirm delivery of this order?'
-                        : 'cancel this order?'}
+                    Êtes-vous sûr de vouloir {confirmDialog.action === 'confirmDelivery' ? 'confirmer la livraison de cette commande ?' : 'annuler cette commande ?'}
                 </DialogContent>
                 <DialogActions>
                     <ActionButton
@@ -284,7 +281,7 @@ export default function OrdersManagement() {
                         disabled={actionLoading}
                         variant="outlined"
                     >
-                        Cancel
+                        Annuler
                     </ActionButton>
                     <ActionButton
                         onClick={handleConfirmDialogSubmit}
@@ -292,7 +289,7 @@ export default function OrdersManagement() {
                         variant="contained"
                         color="primary"
                     >
-                        Yes
+                        Oui
                     </ActionButton>
                 </DialogActions>
             </Dialog>

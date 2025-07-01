@@ -15,19 +15,24 @@ import {
     List,
     ListItem,
     ListItemText,
-    Divider
+    Divider,
+    Stack,
+    Chip,
+    Badge,
+    useTheme
 } from '@mui/material';
-import '../styles/pages.css';
+import { ArrowBack, LocalShipping, Payment, Receipt } from '@mui/icons-material';
 
 export default function CheckoutPage() {
     const navigate = useNavigate();
+    const theme = useTheme();
     const cartItems = useCartStore(s => s.cartItems);
     const subtotal = useCartStore(s => s.getTotalPrice());
+    const shippingCost = useCartStore(s => s.getShippingCost());
     const clearCart = useCartStore(s => s.clearCart);
     const [address, setAddress] = useState('');
     const [phone, setPhone] = useState('');
 
-    const shippingCost = 5;
     const taxAmount = +(subtotal * 0.1).toFixed(2);
     const totalAmount = +(subtotal + shippingCost + taxAmount).toFixed(2);
 
@@ -74,73 +79,171 @@ export default function CheckoutPage() {
     };
 
     return (
-        <Container className="checkout-container">
-            <Typography variant="h4" className="checkout-title">
-                Paiement
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
+            <Button
+                startIcon={<ArrowBack />}
+                onClick={() => navigate('/cart')}
+                sx={{ mb: 2 }}
+            >
+                Retour au panier
+            </Button>
+
+            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
+                <Badge badgeContent={cartItems.length} color="primary" sx={{ mr: 2 }}>
+                    <Payment />
+                </Badge>
+                Finaliser la commande
             </Typography>
 
-            <Grid container className="checkout-grid">
+            <Grid container spacing={3}>
+                {/* Delivery Information */}
                 <Grid item xs={12} md={6}>
-                    <Paper className="checkout-form">
-                        <Typography variant="h6">Informations de livraison</Typography>
-                        <TextField
-                            label="Adresse"
-                            fullWidth
-                            required
-                            margin="normal"
-                            value={address}
-                            onChange={e => setAddress(e.target.value)}
-                        />
-                        <TextField
-                            label="Téléphone"
-                            fullWidth
-                            required
-                            margin="normal"
-                            value={phone}
-                            onChange={e => setPhone(e.target.value)}
-                        />
-                        <Button
-                            variant="contained"
-                            onClick={handleSubmit}
-                            disabled={!address || !phone}
-                            className="checkout-button"
-                        >
-                            Confirmer la commande
-                        </Button>
+                    <Paper
+                        sx={{
+                            p: 3,
+                            borderRadius: 2,
+                            boxShadow: theme.shadows[2]
+                        }}
+                    >
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                            <LocalShipping sx={{ mr: 1, verticalAlign: 'middle' }} />
+                            Informations de livraison
+                        </Typography>
+                        <Divider sx={{ my: 2 }} />
+
+                        <Stack spacing={3}>
+                            <TextField
+                                label="Adresse de livraison"
+                                fullWidth
+                                required
+                                value={address}
+                                onChange={e => setAddress(e.target.value)}
+                                variant="outlined"
+                                size="medium"
+                            />
+                            <TextField
+                                label="Numéro de téléphone"
+                                fullWidth
+                                required
+                                value={phone}
+                                onChange={e => setPhone(e.target.value)}
+                                variant="outlined"
+                                size="medium"
+                            />
+
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                                    Méthode de paiement
+                                </Typography>
+                                <Chip
+                                    label="Paiement à la livraison"
+                                    color="primary"
+                                    icon={<Receipt />}
+                                    sx={{ p: 2 }}
+                                />
+                            </Box>
+                        </Stack>
                     </Paper>
                 </Grid>
 
+                {/* Order Summary */}
                 <Grid item xs={12} md={6}>
-                    <Paper className="checkout-summary">
-                        <Typography variant="h6">Récapitulatif</Typography>
-                        <List>
+                    <Paper
+                        sx={{
+                            p: 3,
+                            borderRadius: 2,
+                            boxShadow: theme.shadows[2],
+                            position: { md: 'sticky' },
+                            top: { md: 100 }
+                        }}
+                    >
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                            Récapitulatif de commande
+                        </Typography>
+                        <Divider sx={{ my: 2 }} />
+
+                        <List dense sx={{ mb: 2 }}>
                             {cartItems.map(i => (
-                                <ListItem key={i.productId}>
-                                    <ListItemText
-                                        primary={`${i.name} x${i.quantity}`}
-                                        secondary={`${(i.price * i.quantity).toFixed(2)} DT`}
-                                    />
-                                </ListItem>
+                                <React.Fragment key={i.productId}>
+                                    <ListItem sx={{ px: 0 }}>
+                                        <ListItemText
+                                            primary={`${i.name}`}
+                                            secondary={`${i.quantity} × ${i.price.toFixed(2)} DT`}
+                                            primaryTypographyProps={{ fontWeight: 500 }}
+                                        />
+                                        <Typography variant="body1" fontWeight={500}>
+                                            {(i.price * i.quantity).toFixed(2)} DT
+                                        </Typography>
+                                    </ListItem>
+                                    <Divider component="li" />
+                                </React.Fragment>
                             ))}
                         </List>
-                        <Divider sx={{ margin: '16px 0' }} />
-                        <Box display="flex" justifyContent="space-between">
-                            <Typography>Sous-total</Typography>
-                            <Typography>{subtotal.toFixed(2)} DT</Typography>
-                        </Box>
-                        <Box display="flex" justifyContent="space-between">
-                            <Typography>Livraison</Typography>
-                            <Typography>{shippingCost.toFixed(2)} DT</Typography>
-                        </Box>
-                        <Box display="flex" justifyContent="space-between">
-                            <Typography>Taxe (10%)</Typography>
-                            <Typography>{taxAmount.toFixed(2)} DT</Typography>
-                        </Box>
-                        <Divider sx={{ margin: '16px 0' }} />
-                        <Box display="flex" justifyContent="space-between">
+
+                        <Stack spacing={1.5} sx={{ mb: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography>Sous-total</Typography>
+                                <Typography>{subtotal.toFixed(2)} DT</Typography>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography>
+                                    Livraison
+                                    {shippingCost === 0 && (
+                                        <Chip
+                                            label="Gratuite"
+                                            size="small"
+                                            color="success"
+                                            sx={{ ml: 1 }}
+                                        />
+                                    )}
+                                </Typography>
+                                <Typography>
+                                    {shippingCost === 0 ? (
+                                        <Typography component="span" color="success.main">
+                                            Gratuite
+                                        </Typography>
+                                    ) : (
+                                        `${shippingCost.toFixed(2)} DT`
+                                    )}
+                                </Typography>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography>Taxe (10%)</Typography>
+                                <Typography>{taxAmount.toFixed(2)} DT</Typography>
+                            </Box>
+                        </Stack>
+
+                        <Divider sx={{ my: 2 }} />
+
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            mb: 3
+                        }}>
                             <Typography variant="h6">Total</Typography>
-                            <Typography variant="h6">{totalAmount.toFixed(2)} DT</Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                {totalAmount.toFixed(2)} DT
+                            </Typography>
                         </Box>
+
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            size="large"
+                            onClick={handleSubmit}
+                            disabled={!address || !phone}
+                            sx={{ py: 1.5 }}
+                        >
+                            Confirmer la commande
+                        </Button>
+
+                        {shippingCost > 0 && subtotal < 100 && (
+                            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                Livraison gratuite pour les commandes supérieures à 100 DT
+                            </Typography>
+                        )}
                     </Paper>
                 </Grid>
             </Grid>

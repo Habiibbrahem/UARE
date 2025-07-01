@@ -26,8 +26,8 @@ import { Add, Edit, Delete, ExpandMore, ExpandLess } from '@mui/icons-material';
 import axios from 'axios';
 import '../../styles/admin/dashboardadmin.css';
 
-// CategoriesManagement: Manages categories with a nested table and dialog for add/edit
-export default function CategoriesManagement() {
+// Gestion des catégories : Gère les catégories avec un tableau imbriqué et une boîte de dialogue pour ajouter/modifier
+export default function GestionCategories() {
     const [categories, setCategories] = useState([]);
     const [tree, setTree] = useState([]);
     const [breadcrumbs, setBreadcrumbs] = useState({});
@@ -40,14 +40,14 @@ export default function CategoriesManagement() {
 
     const API_BASE = 'http://localhost:3000';
 
-    // Fetch categories from API
+    // Récupère les catégories depuis l'API
     const fetchCategories = async () => {
         setFetching(true);
         setError(null);
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                setError('User not authenticated');
+                setError('Utilisateur non authentifié');
                 setCategories([]);
                 setFetching(false);
                 return;
@@ -61,13 +61,13 @@ export default function CategoriesManagement() {
             }));
             setCategories(catsWithParent);
         } catch (err) {
-            setError('Failed to fetch categories');
+            setError('Échec de la récupération des catégories');
             setCategories([]);
         }
         setFetching(false);
     };
 
-    // Build lookup map for breadcrumb generation
+    // Construit la table de correspondance pour la génération du fil d'Ariane
     const buildLookup = (list) => {
         const lookup = {};
         list.forEach((cat) => {
@@ -76,7 +76,7 @@ export default function CategoriesManagement() {
         return lookup;
     };
 
-    // Compute breadcrumb strings for each category
+    // Calcule les chaînes de fil d'Ariane pour chaque catégorie
     const computeBreadcrumbs = (list) => {
         const lookup = buildLookup(list);
         const memo = {};
@@ -101,7 +101,7 @@ export default function CategoriesManagement() {
         return memo;
     };
 
-    // Build nested tree for table display
+    // Construit l'arborescence imbriquée pour l'affichage du tableau
     const buildTree = (list) => {
         const map = {};
         const roots = [];
@@ -141,7 +141,7 @@ export default function CategoriesManagement() {
         setExpandedIds(newExpanded);
     };
 
-    // Render nested table rows
+    // Affiche les lignes imbriquées du tableau
     const renderRows = (nodes, level = 0) =>
         nodes.map((cat) => (
             <React.Fragment key={cat._id}>
@@ -163,7 +163,7 @@ export default function CategoriesManagement() {
                     <TableCell>
                         {cat.parentId
                             ? categories.find((c) => c._id === cat.parentId)?.name || '-'
-                            : 'Root'}
+                            : 'Racine'}
                     </TableCell>
                     <TableCell align="right">
                         <IconButton
@@ -210,14 +210,14 @@ export default function CategoriesManagement() {
 
     const handleSave = async () => {
         if (!selectedCategory.name || selectedCategory.name.trim() === '') {
-            alert('Category name is required');
+            alert('Le nom de la catégorie est requis');
             return;
         }
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('User not authenticated');
+                alert('Utilisateur non authentifié');
                 setLoading(false);
                 return;
             }
@@ -238,17 +238,17 @@ export default function CategoriesManagement() {
             await fetchCategories();
             handleCloseDialog();
         } catch (err) {
-            alert('Failed to save category');
+            alert('Échec de l\'enregistrement de la catégorie');
         }
         setLoading(false);
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this category?')) return;
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('User not authenticated');
+                alert('Utilisateur non authentifié');
                 return;
             }
             await axios.delete(`${API_BASE}/categories/${id}`, {
@@ -256,7 +256,7 @@ export default function CategoriesManagement() {
             });
             await fetchCategories();
         } catch (err) {
-            alert('Failed to delete category');
+            alert('Échec de la suppression de la catégorie');
         }
     };
 
@@ -264,17 +264,17 @@ export default function CategoriesManagement() {
         <Box
             sx={{
                 width: '100%',
-                maxWidth: 1200,      // << Wide but not too wide. Adjust here (1100/1300/1400 etc)
+                maxWidth: 1200,      // << Large mais pas trop. Ajustez ici (1100/1300/1400 etc)
                 minHeight: '100vh',
                 bgcolor: '#f9f9f9',
-                px: 3,               // << Some horizontal padding
+                px: 3,               // << Un peu de padding horizontal
                 py: 4,
-                mx: 'auto',          // << Center horizontally
+                mx: 'auto',          // << Centrer horizontalement
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h5" sx={{ fontWeight: 'medium' }}>
-                    Categories Management
+                    Gestion des catégories
                 </Typography>
                 <Button
                     variant="contained"
@@ -288,7 +288,7 @@ export default function CategoriesManagement() {
                         '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
-                    Add Category
+                    Ajouter une catégorie
                 </Button>
             </Box>
 
@@ -302,7 +302,7 @@ export default function CategoriesManagement() {
                 </Typography>
             ) : categories.length === 0 ? (
                 <Typography sx={{ textAlign: 'center', color: 'grey.600' }}>
-                    No categories available.
+                    Aucune catégorie disponible.
                 </Typography>
             ) : (
                 <TableContainer
@@ -320,9 +320,9 @@ export default function CategoriesManagement() {
                     <Table className="dashboard-table" sx={{ minWidth: 900 }}>
                         <TableHead>
                             <TableRow sx={{ bgcolor: 'grey.100' }}>
-                                <TableCell>Name</TableCell>
+                                <TableCell>Nom</TableCell>
                                 <TableCell>Description</TableCell>
-                                <TableCell>Parent Category</TableCell>
+                                <TableCell>Catégorie parente</TableCell>
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
@@ -338,12 +338,12 @@ export default function CategoriesManagement() {
                 sx={{ '& .MuiDialog-paper': { borderRadius: 2, p: 2 } }}
             >
                 <DialogTitle sx={{ fontWeight: 'medium' }}>
-                    {selectedCategory?._id ? 'Edit Category' : 'Add Category'}
+                    {selectedCategory?._id ? 'Modifier la catégorie' : 'Ajouter une catégorie'}
                 </DialogTitle>
                 <DialogContent>
                     <TextField
                         margin="dense"
-                        label="Name"
+                        label="Nom"
                         name="name"
                         value={selectedCategory?.name || ''}
                         onChange={handleInputChange}
@@ -361,10 +361,10 @@ export default function CategoriesManagement() {
                         sx={{ mb: 2 }}
                     />
                     <FormControl fullWidth sx={{ mb: 2 }}>
-                        <InputLabel id="parent-category-label">Parent Category</InputLabel>
+                        <InputLabel id="parent-category-label">Catégorie parente</InputLabel>
                         <Select
                             labelId="parent-category-label"
-                            label="Parent Category"
+                            label="Catégorie parente"
                             name="parentId"
                             value={selectedCategory?.parentId || ''}
                             onChange={handleInputChange}
@@ -374,7 +374,7 @@ export default function CategoriesManagement() {
                                 },
                             }}
                         >
-                            <MenuItem value="">None (Root category)</MenuItem>
+                            <MenuItem value="">Aucune (Catégorie racine)</MenuItem>
                             {categories
                                 .filter((cat) => cat._id !== selectedCategory?._id)
                                 .map((cat) => (
@@ -390,7 +390,7 @@ export default function CategoriesManagement() {
                         onClick={handleCloseDialog}
                         sx={{ textTransform: 'none', color: 'grey.600' }}
                     >
-                        Cancel
+                        Annuler
                     </Button>
                     <Button
                         variant="contained"
@@ -403,7 +403,7 @@ export default function CategoriesManagement() {
                             '&:hover': { bgcolor: 'primary.dark' },
                         }}
                     >
-                        {loading ? 'Saving...' : 'Save'}
+                        {loading ? 'Enregistrement...' : 'Enregistrer'}
                     </Button>
                 </DialogActions>
             </Dialog>

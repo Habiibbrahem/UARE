@@ -22,14 +22,14 @@ import { Add, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
 import '../../styles/admin/dashboardadmin.css';
 
-// StoreOwnersManagement: Manages store owners with a table and dialog for add/edit
-export default function StoreOwnersManagement() {
+// GestionProprietairesMagasin : Gère les propriétaires de magasins avec un tableau et une boîte de dialogue pour ajouter/modifier
+export default function GestionProprietairesMagasin() {
     const [owners, setOwners] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedOwner, setSelectedOwner] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    // Fetch store owners
+    // Récupérer les propriétaires de magasins
     const fetchOwners = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -38,7 +38,7 @@ export default function StoreOwnersManagement() {
             });
             setOwners(res.data);
         } catch (error) {
-            console.error('Error fetching store owners:', error);
+            console.error('Erreur lors de la récupération des propriétaires :', error);
         }
     };
 
@@ -66,11 +66,11 @@ export default function StoreOwnersManagement() {
 
     const handleSave = async () => {
         if (!selectedOwner?.name || !selectedOwner?.email) {
-            alert('Name and Email are required');
+            alert('Le nom et l\'email sont requis');
             return;
         }
         if (!selectedOwner._id && !selectedOwner.password) {
-            alert('Password is required for new store owners');
+            alert('Le mot de passe est requis pour un nouveau propriétaire');
             return;
         }
         setLoading(true);
@@ -99,14 +99,14 @@ export default function StoreOwnersManagement() {
             await fetchOwners();
             handleCloseDialog();
         } catch (error) {
-            console.error('Error saving store owner:', error);
-            alert('Failed to save store owner');
+            console.error('Erreur lors de l\'enregistrement du propriétaire :', error);
+            alert('Échec de l\'enregistrement');
         }
         setLoading(false);
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this store owner?')) return;
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce propriétaire ?')) return;
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`http://localhost:3000/users/${id}`, {
@@ -114,8 +114,8 @@ export default function StoreOwnersManagement() {
             });
             fetchOwners();
         } catch (error) {
-            console.error('Error deleting store owner:', error);
-            alert('Failed to delete store owner');
+            console.error('Erreur lors de la suppression du propriétaire :', error);
+            alert('Échec de la suppression');
         }
     };
 
@@ -123,7 +123,7 @@ export default function StoreOwnersManagement() {
         <Box sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h5" sx={{ fontWeight: 'medium' }}>
-                    Store Owners Management
+                    Gestion des propriétaires de magasins
                 </Typography>
                 <Button
                     variant="contained"
@@ -137,7 +137,7 @@ export default function StoreOwnersManagement() {
                         '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
-                    Add Store Owner
+                    Ajouter un propriétaire
                 </Button>
             </Box>
 
@@ -145,9 +145,9 @@ export default function StoreOwnersManagement() {
                 <Table>
                     <TableHead>
                         <TableRow sx={{ bgcolor: 'grey.100' }}>
-                            <TableCell>Owner Name</TableCell>
-                            <TableCell>Owner Email</TableCell>
-                            <TableCell>Assigned Stores</TableCell>
+                            <TableCell>Nom</TableCell>
+                            <TableCell>Email</TableCell>
+                            <TableCell>Magasins assignés</TableCell>
                             <TableCell align="right">Actions</TableCell>
                         </TableRow>
                     </TableHead>
@@ -166,7 +166,7 @@ export default function StoreOwnersManagement() {
                                             ))
                                         ) : (
                                             <Typography variant="body2" color="text.secondary">
-                                                <em>No assigned stores</em>
+                                                <em>Aucun magasin assigné</em>
                                             </Typography>
                                         )}
                                     </TableCell>
@@ -190,7 +190,7 @@ export default function StoreOwnersManagement() {
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={4} sx={{ textAlign: 'center', color: 'grey.600' }}>
-                                    No store owners found.
+                                    Aucun propriétaire trouvé.
                                 </TableCell>
                             </TableRow>
                         )}
@@ -205,12 +205,12 @@ export default function StoreOwnersManagement() {
                 sx={{ '& .MuiDialog-paper': { borderRadius: 2, p: 2 } }}
             >
                 <DialogTitle sx={{ fontWeight: 'medium' }}>
-                    {selectedOwner && selectedOwner._id ? 'Edit Store Owner' : 'Add Store Owner'}
+                    {selectedOwner && selectedOwner._id ? 'Modifier un propriétaire' : 'Ajouter un propriétaire'}
                 </DialogTitle>
                 <DialogContent>
                     <TextField
                         margin="dense"
-                        label="Name"
+                        label="Nom"
                         name="name"
                         value={selectedOwner?.name || ''}
                         onChange={handleInputChange}
@@ -230,7 +230,7 @@ export default function StoreOwnersManagement() {
                     {!selectedOwner?._id && (
                         <TextField
                             margin="dense"
-                            label="Password"
+                            label="Mot de passe"
                             name="password"
                             value={selectedOwner?.password || ''}
                             onChange={handleInputChange}
@@ -245,7 +245,7 @@ export default function StoreOwnersManagement() {
                         onClick={handleCloseDialog}
                         sx={{ textTransform: 'none', color: 'grey.600' }}
                     >
-                        Cancel
+                        Annuler
                     </Button>
                     <Button
                         variant="contained"
@@ -258,7 +258,7 @@ export default function StoreOwnersManagement() {
                             '&:hover': { bgcolor: 'primary.dark' },
                         }}
                     >
-                        {loading ? 'Saving...' : 'Save'}
+                        {loading ? 'Enregistrement...' : 'Enregistrer'}
                     </Button>
                 </DialogActions>
             </Dialog>
