@@ -13,7 +13,8 @@ import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
-import AccountPage from './pages/AccountPage';    // ← make sure this exists
+import AccountPage from './pages/AccountPage';
+import MyOrdersPage from './pages/MyOrdersPage'; // <-- ajouté pour My Orders
 
 import Navbar from './components/Navbar';
 
@@ -60,6 +61,16 @@ export default function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/order-confirmation/:storeId" element={<OrderConfirmationPage />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+
+            {/* My Orders (client) */}
+            <Route
+              path="/orders"
+              element={
+                <RequireAuth allowedRoles={['customer']}>
+                  <MyOrdersPage />
+                </RequireAuth>
+              }
+            />
 
             {/* Account */}
             <Route
